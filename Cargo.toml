@@ -1,0 +1,21 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "crates/common",
+    "crates/frontend",
+    "crates/semantics",
+    "crates/ir",
+    "crates/backend",
+    "crates/vm",
+    "crates/stdlib",
+    "crates/tools",
+]
+
+default-members = [
+    "crates/tools",
+]
+
+exclude = [
+    "target",
+]
