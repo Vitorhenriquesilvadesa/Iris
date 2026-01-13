@@ -41,6 +41,7 @@ pub enum TokenKind {
     GreaterEq,
     Less,
     LessEq,
+    Not,
 
     Arrow,
     Pipe,

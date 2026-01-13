@@ -5,10 +5,10 @@ pub fn main() {
     let driver = CompilerDriver::new(options);
 
     match driver.run() {
-        Ok(_) => {}
-        Err(_) => {
-            panic!();
-            // std::process::exit(1)
+        true => {}
+        false => {
+            // panic!();
+            std::process::exit(1)
         }
     }
 }

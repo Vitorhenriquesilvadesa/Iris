@@ -22,3 +22,4 @@ Thumbs.db
 *.profraw
 *.gcda
 *.gcno
+.env

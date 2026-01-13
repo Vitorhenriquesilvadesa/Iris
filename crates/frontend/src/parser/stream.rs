@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use common::{
-    diagnostic::Diagnostic,
+    diagnostic::{Diagnostic, DiagnosticResult},
     token::{Token, TokenKind},
 };
 
@@ -30,7 +30,7 @@ impl TokenStream {
             return true;
         }
 
-        return self.peek_kind().unwrap_or(TokenKind::Eof) == TokenKind::Eof;
+        self.peek_kind().unwrap_or(TokenKind::Eof) == TokenKind::Eof
     }
 
     pub fn peek(&self) -> Option<&Token> {
@@ -61,18 +61,17 @@ impl TokenStream {
         self.pos = checkpoint.0;
     }
 
-    pub fn expect(&mut self, kind: TokenKind) -> Result<&Token, Diagnostic> {
+    pub fn expect(&mut self, kind: TokenKind) -> DiagnosticResult<&Token> {
         match self.peek() {
             Some(tok) if tok.kind == kind => Ok(self.bump().unwrap()),
-            Some(tok) => Err(Diagnostic::error(format!(
-                "expected token {:?}, found {:?}",
-                kind, tok.kind
-            ))
-            .with_primary_span(tok.span)),
-            None => Err(Diagnostic::error(format!(
+            Some(tok) => Err(Box::new(
+                Diagnostic::error(format!("expected token {:?}, found {:?}", kind, tok.kind))
+                    .with_primary_span(tok.span),
+            )),
+            None => Err(Box::new(Diagnostic::error(format!(
                 "expected token {:?}, found end of file",
                 kind
-            ))),
+            )))),
         }
     }
 }

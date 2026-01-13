@@ -3,7 +3,7 @@ use std::sync::Arc;
 use common::{ast::Ast, diagnostic::Diagnostics, source::SourceFileId, token::Token};
 use compiler_api::queries::{QueryResult, lexer::LexerQueries, source::SourceQueries};
 
-use crate::parser::{parser::Parser, stream::TokenStream};
+use crate::parser::{Parser, stream::TokenStream};
 
 pub fn parse<Ctx>(ctx: &Ctx, source_id: SourceFileId) -> QueryResult<Ast>
 where

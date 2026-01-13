@@ -3,7 +3,7 @@ use std::sync::Arc;
 use common::{diagnostic::Diagnostics, source::SourceFileId, token::Token};
 use compiler_api::queries::{QueryResult, source::SourceQueries};
 
-use crate::lexer::lexer::Lexer;
+use crate::lexer::Lexer;
 
 pub fn lex(ctx: &impl SourceQueries, source_id: SourceFileId) -> QueryResult<Vec<Token>> {
     let source_text = ctx.source_by_id(source_id)?;

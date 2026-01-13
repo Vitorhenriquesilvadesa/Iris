@@ -1,4 +1,7 @@
-use crate::ast::{Spanned, statement::StmtKind};
+use crate::{
+    ast::{Spanned, statement::StmtKind},
+    token::TokenKind,
+};
 
 /// Represents the various kinds of expressions available in the language.
 #[derive(Debug, Clone)]
@@ -84,6 +87,27 @@ pub enum BinaryOp {
     Geq,
 }
 
+impl BinaryOp {
+    pub fn from_token_kind(value: TokenKind) -> Option<Self> {
+        match value {
+            TokenKind::Plus => Some(Self::Add),
+            TokenKind::Minus => Some(Self::Sub),
+            TokenKind::Star => Some(Self::Mul),
+            TokenKind::Slash => Some(Self::Div),
+            TokenKind::Greater => Some(Self::Gt),
+            TokenKind::GreaterEq => Some(Self::Geq),
+            TokenKind::Less => Some(Self::Lt),
+            TokenKind::LessEq => Some(Self::Leq),
+            TokenKind::EqualEqual => Some(Self::Eq),
+            TokenKind::BangEqual => Some(Self::Neq),
+            TokenKind::Range => Some(Self::Range),
+            TokenKind::Pipe => Some(Self::Pipe),
+
+            _ => None,
+        }
+    }
+}
+
 /// Represents a unary operation with a single operand.
 #[derive(Debug, Clone)]
 pub struct UnaryExpr {
@@ -100,6 +124,19 @@ pub enum UnaryOp {
     Neg,
     /// Logical NOT (`!`), flips a boolean value.
     Not,
+    /// Only to follow math concepts.
+    Plus,
+}
+
+impl UnaryOp {
+    pub fn from_token_kind(value: TokenKind) -> Option<Self> {
+        match value {
+            TokenKind::Plus => Some(Self::Plus),
+            TokenKind::Minus => Some(Self::Neg),
+            TokenKind::Not => Some(Self::Not),
+            _ => None,
+        }
+    }
 }
 
 /// Represents a function call.

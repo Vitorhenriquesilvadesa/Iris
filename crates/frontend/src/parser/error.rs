@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use common::{diagnostic::DiagnosticCode, token::TokenKind};
 
 /// Represents the various errors that can occur during syntactic analysis (parsing).

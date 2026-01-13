@@ -14,7 +14,7 @@ use common::{
 use compiler_api::queries::QueryResult;
 use dashmap::DashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SourceMap {
     files: DashMap<SourceFileId, Arc<SourceFile>>,
     paths: DashMap<PathBuf, SourceFileId>,
@@ -35,21 +35,18 @@ impl SourceMap {
             return Ok(file.clone());
         }
 
-        let msg = String::from(format!(
-            "File with id '{}' not found in registry.",
-            id.as_u32()
-        ));
+        let msg = format!("File with id '{}' not found in registry.", id.as_u32());
         let diag = Diagnostic::error(msg);
-        return Err(Arc::new(Diagnostics::single(diag)));
+        Err(Arc::new(Diagnostics::single(diag)))
     }
 
     pub fn load_file<P: Into<PathBuf>>(&self, path: P) -> QueryResult<SourceFile> {
         let path = path.into();
 
-        if let Some(id) = self.paths.get(&path) {
-            if let Some(file) = self.files.get(&*id) {
-                return Ok(file.clone());
-            }
+        if let Some(id) = self.paths.get(&path)
+            && let Some(file) = self.files.get(&*id)
+        {
+            return Ok(file.clone());
         }
 
         let text = match fs::read_to_string(&path) {

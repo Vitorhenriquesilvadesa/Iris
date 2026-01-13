@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use common::{ast::Ast, source::SourceFileId};
 
 use crate::queries::QueryResult;

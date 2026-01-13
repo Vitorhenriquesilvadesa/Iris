@@ -1,6 +1,6 @@
 use colored::{Color, Colorize};
 use common::{
-    diagnostic::{Diagnostic, DiagnosticSeverity},
+    diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticSeverity},
     source::SourceFile,
 };
 
@@ -29,10 +29,10 @@ impl<'a> DiagnosticRenderer<'a> {
         }
         eprintln!(": {}", diag.message.bold());
 
-        if let (Some(file_id), Some(span)) = (diag.file, diag.primary_span) {
-            if let Ok(file) = self.map.load_by_id(file_id) {
-                self.render_snippet(&file, span.start as usize, span.end() as usize, color);
-            }
+        if let (Some(file_id), Some(span)) = (diag.file, diag.primary_span)
+            && let Ok(file) = self.map.load_by_id(file_id)
+        {
+            self.render_snippet(&file, span.start, span.end(), color, &diag.labels);
         }
 
         for note in &diag.notes {
@@ -42,7 +42,14 @@ impl<'a> DiagnosticRenderer<'a> {
         eprintln!();
     }
 
-    fn render_snippet(&self, file: &SourceFile, start: usize, end: usize, color: Color) {
+    fn render_snippet(
+        &self,
+        file: &SourceFile,
+        start: usize,
+        end: usize,
+        color: Color,
+        labels: &[DiagnosticLabel],
+    ) {
         let (line_idx, col_idx) = file.line_col(start);
 
         let line_num = line_idx + 1;
@@ -74,8 +81,20 @@ impl<'a> DiagnosticRenderer<'a> {
         let padding = " ".repeat(col_idx);
         let markers = "^".repeat(len).color(color).bold();
 
-        let label_msg = "".to_string();
+        let decoration_start = format!(" {} {}{}", empty_gutter, padding, markers);
 
-        eprintln!(" {} {}{} {}", empty_gutter, padding, markers, label_msg);
+        if labels.is_empty() {
+            eprintln!("{}", decoration_start);
+        } else {
+            let mut separator = " ";
+            eprint!("{}", decoration_start);
+
+            for label in labels {
+                if let Some(msg) = &label.message {
+                    eprint!("{}", format!("{}{}", separator, msg).color(Color::Red));
+                    separator = "\n";
+                }
+            }
+        }
     }
 }

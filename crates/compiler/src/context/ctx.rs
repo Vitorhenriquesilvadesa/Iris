@@ -49,10 +49,7 @@ impl CompilerContext {
         let file_result = self.source_by_id(SourceFileId::new(1));
 
         match file_result {
-            Ok(file) => {
-                let output = self.ast_of(file.id());
-                output
-            }
+            Ok(file) => self.ast_of(file.id()),
             Err(e) => Err(e),
         }
     }

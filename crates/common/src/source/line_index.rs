@@ -22,12 +22,12 @@ impl LineIndex {
     }
 
     pub fn line_range(&self, line_idx: usize, source_len: usize) -> Option<Range<usize>> {
-        let start = *self.line_starts.get(line_idx)? as usize;
+        let start = *self.line_starts.get(line_idx)?;
 
         let end = self
             .line_starts
             .get(line_idx + 1)
-            .map(|&pos| pos as usize)
+            .copied()
             .unwrap_or(source_len);
 
         Some(start..end)
