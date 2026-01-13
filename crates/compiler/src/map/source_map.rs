@@ -1,0 +1,74 @@
+use std::{
+    fs,
+    path::PathBuf,
+    sync::{
+        Arc,
+        atomic::{AtomicU32, Ordering},
+    },
+};
+
+use common::{
+    diagnostic::{Diagnostic, Diagnostics},
+    source::{SourceFile, SourceFileId},
+};
+use compiler_api::queries::QueryResult;
+use dashmap::DashMap;
+
+#[derive(Debug)]
+pub struct SourceMap {
+    files: DashMap<SourceFileId, Arc<SourceFile>>,
+    paths: DashMap<PathBuf, SourceFileId>,
+    next_id: AtomicU32,
+}
+
+impl SourceMap {
+    pub fn new() -> Self {
+        Self {
+            files: DashMap::new(),
+            paths: DashMap::new(),
+            next_id: 1.into(),
+        }
+    }
+
+    pub fn load_by_id(&self, id: SourceFileId) -> QueryResult<SourceFile> {
+        if let Some(file) = self.files.get(&id) {
+            return Ok(file.clone());
+        }
+
+        let msg = String::from(format!(
+            "File with id '{}' not found in registry.",
+            id.as_u32()
+        ));
+        let diag = Diagnostic::error(msg);
+        return Err(Arc::new(Diagnostics::single(diag)));
+    }
+
+    pub fn load_file<P: Into<PathBuf>>(&self, path: P) -> QueryResult<SourceFile> {
+        let path = path.into();
+
+        if let Some(id) = self.paths.get(&path) {
+            if let Some(file) = self.files.get(&*id) {
+                return Ok(file.clone());
+            }
+        }
+
+        let text = match fs::read_to_string(&path) {
+            Ok(t) => t,
+            Err(e) => {
+                let msg = format!("Unable to read file '{}': {}", path.display(), e);
+                let diag = Diagnostic::error(msg);
+                return Err(Arc::new(Diagnostics::single(diag)));
+            }
+        };
+
+        let id_val = self.next_id.fetch_add(1, Ordering::Relaxed);
+        let id = SourceFileId::new(id_val);
+
+        let source_file = Arc::new(SourceFile::new(id, path.clone(), text));
+
+        self.files.insert(id, source_file.clone());
+        self.paths.insert(path, id);
+
+        Ok(source_file)
+    }
+}

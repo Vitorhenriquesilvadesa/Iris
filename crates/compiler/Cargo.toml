@@ -1,15 +1,12 @@
 [package]
-name = "tools"
+name = "compiler"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 common = { path = "../common" }
+dashmap = "6.1.0"
 frontend = { path = "../frontend" }
 semantics = { path = "../semantics" }
-ir = { path = "../ir" }
-compiler = { path = "../compiler" }
-
-[[bin]]
-name = "iris"
-path = "src/cli.rs"
+compiler-api = { path = "../compiler-api" }
+colored = "2.0"

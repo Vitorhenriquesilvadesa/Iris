@@ -1,8 +1,7 @@
 [package]
-name = "frontend"
+name = "compiler-api"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 common = { path = "../common" }
-compiler-api = { path = "../compiler-api" }
