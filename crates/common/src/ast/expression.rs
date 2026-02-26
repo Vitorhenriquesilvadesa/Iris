@@ -1,7 +1,14 @@
 use crate::{
-    ast::{Spanned, statement::StmtKind},
+    ast::{Expression, Spanned, Statement, item::AstTypeInfo, statement::StmtKind},
     token::TokenKind,
 };
+
+#[derive(Debug, Clone)]
+pub struct AssignmentExpr {
+    pub assignee: Expression,
+    pub op: AssignmentOp,
+    pub value: Expression,
+}
 
 /// Represents the various kinds of expressions available in the language.
 #[derive(Debug, Clone)]
@@ -10,7 +17,7 @@ pub enum ExprKind {
     Literal(Literal),
 
     /// Variable identifiers or names.
-    Ident(String),
+    Ident(Spanned<String>),
 
     /// Binary operations (e.g., `a + b`, `a |> b`).
     Binary(Box<BinaryExpr>),
@@ -24,14 +31,11 @@ pub enum ExprKind {
     /// A list literal (e.g., `[1, 2, 3]`).
     List(Vec<Spanned<ExprKind>>),
 
-    /// A range expression (e.g., `1..10`).
-    Range(Box<RangeExpr>),
-
-    /// A block of code typically containing statements (e.g., `{ let x = 1; x }`).
-    Block(Block),
-
     /// Control flow expression for conditional execution.
     If(Box<IfExpr>),
+    Grouping(Box<Expression>),
+    Lambda(Box<LambdaExpr>),
+    Assign(Box<AssignmentExpr>),
 }
 
 /// Represents literal values in the AST.
@@ -47,6 +51,18 @@ pub enum Literal {
     Bool(bool),
 }
 
+#[derive(Debug, Clone)]
+pub struct Param {
+    pub name: Spanned<String>,
+    pub kind: Spanned<AstTypeInfo>,
+}
+
+#[derive(Debug, Clone)]
+pub struct LambdaExpr {
+    pub params: Vec<Param>,
+    pub body: Statement,
+}
+
 /// Represents a binary operation with two operands.
 #[derive(Debug, Clone)]
 pub struct BinaryExpr {
@@ -56,6 +72,38 @@ pub struct BinaryExpr {
     pub op: BinaryOp,
     /// The right-hand side operand.
     pub right: Spanned<ExprKind>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AssignmentOp {
+    Assign,       // =
+    AddAssign,    // +=
+    SubAssign,    // -=
+    MulAssign,    // *=
+    DivAssign,    // /=
+    ModAssign,    // %=
+    BitAndAssign, // &=
+    BitOrAssign,  // |=
+    LShiftAssign, // <<=
+    RShitAssign,  // >>=
+}
+
+impl AssignmentOp {
+    pub fn from_token(kind: TokenKind) -> Option<Self> {
+        match kind {
+            TokenKind::Equal => Some(Self::Assign),
+            TokenKind::PlusEqual => Some(Self::AddAssign),
+            TokenKind::MinusEqual => Some(Self::SubAssign),
+            TokenKind::StarEqual => Some(Self::MulAssign),
+            TokenKind::SlashEqual => Some(Self::DivAssign),
+            TokenKind::PercentEqual => Some(Self::ModAssign),
+            TokenKind::BitwiseAndEqual => Some(Self::BitAndAssign),
+            TokenKind::BitwiseOrEqual => Some(Self::BitOrAssign),
+            TokenKind::LShiftEqual => Some(Self::LShiftAssign),
+            TokenKind::RShiftEqual => Some(Self::RShitAssign),
+            _ => None,
+        }
+    }
 }
 
 /// Available binary operators.
@@ -85,6 +133,15 @@ pub enum BinaryOp {
     Leq,
     /// Greater than or equal to (`>=`).
     Geq,
+    Comma,
+    Mod,
+    And,
+    Or,
+    LShift,
+    RShift,
+    BitwiseAnd,
+    BitwiseOr,
+    Catch,
 }
 
 impl BinaryOp {
@@ -94,6 +151,7 @@ impl BinaryOp {
             TokenKind::Minus => Some(Self::Sub),
             TokenKind::Star => Some(Self::Mul),
             TokenKind::Slash => Some(Self::Div),
+            TokenKind::Percent => Some(Self::Mod),
             TokenKind::Greater => Some(Self::Gt),
             TokenKind::GreaterEq => Some(Self::Geq),
             TokenKind::Less => Some(Self::Lt),
@@ -101,7 +159,15 @@ impl BinaryOp {
             TokenKind::EqualEqual => Some(Self::Eq),
             TokenKind::BangEqual => Some(Self::Neq),
             TokenKind::Range => Some(Self::Range),
-            TokenKind::Pipe => Some(Self::Pipe),
+            TokenKind::PipeGt => Some(Self::Pipe),
+            TokenKind::Comma => Some(Self::Comma),
+            TokenKind::And => Some(Self::And),
+            TokenKind::Or => Some(Self::Or),
+            TokenKind::BitwiseAnd => Some(Self::BitwiseAnd),
+            TokenKind::Pipe => Some(Self::BitwiseOr),
+            TokenKind::LShift => Some(Self::LShift),
+            TokenKind::RShift => Some(Self::RShift),
+            TokenKind::Catch => Some(Self::Catch),
 
             _ => None,
         }
@@ -126,6 +192,8 @@ pub enum UnaryOp {
     Not,
     /// Only to follow math concepts.
     Plus,
+
+    Try,
 }
 
 impl UnaryOp {
@@ -168,12 +236,7 @@ pub struct RangeExpr {
 /// Represents an `if` expression (and optional `else`).
 #[derive(Debug, Clone)]
 pub struct IfExpr {
-    /// The condition to evaluate.
     pub condition: Spanned<ExprKind>,
-    /// The block to execute if the condition is true.
-    pub then_branch: Block,
-    /// The optional expression to execute if the condition is false.
-    /// This is an `ExprKind` to allow chaining `else if` structures smoothly,
-    /// as well as `else { block }`.
-    pub else_branch: Option<Spanned<ExprKind>>,
+    pub then_branch: Spanned<ExprKind>,
+    pub else_branch: Spanned<ExprKind>,
 }

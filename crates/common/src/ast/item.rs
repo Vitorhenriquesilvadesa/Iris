@@ -1,54 +1,149 @@
-use crate::ast::expression::Block;
+use crate::{
+    ast::{
+        Expression, Item, Spanned,
+        expression::{Block, Param},
+    },
+    token::TokenKind,
+};
 
 /// Represents top-level declarations in a source file.
 #[derive(Debug, Clone)]
 pub enum ItemKind {
-    /// Imports external modules (e.g., `import Iris.Data as df`).
+    /// Imports external modules.
     Import(Box<ImportDef>),
 
-    /// Defines a new data model (e.g., `model LinearModel { ... }`).
-    Model(Box<ModelDef>),
+    /// Global variable declaration.
+    GlobalLet(Box<super::statement::LetStmt>),
 
-    /// Extends an existing type with new methods (e.g., `extend DataFrame { ... }`).
-    Extend(Box<ExtendDef>),
+    /// Type declaration.
+    Type(Box<TypeDef>),
 
-    /// A standalone expression at the top level (e.g., `print(age_mean)`).
+    /// A standalone expression at the top level.
     Stmt(Box<super::statement::StmtKind>),
+
+    /// Function declaration.
+    Function(FunctionDef),
+
+    Metadata(MetaDataUsage),
+
+    Impl(ImplDef),
 }
 
+#[derive(Debug, Clone)]
+pub struct MetaDataUsage {
+    pub name: Spanned<String>,
+    pub args: Vec<Spanned<MetaArgument>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ImplDef {
+    pub target: Spanned<AstTypeInfo>,
+    pub methods: Vec<Item>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MetaArgument {
+    pub name: Spanned<String>,
+    pub value: Expression,
+}
+
+/// Represents a user-defined type declaration.
+///
+/// A type is identified by a name and contains a list of fields.
+/// Each field reuses [`Param`] to preserve parser and lowering consistency
+/// with function parameters.
+#[derive(Debug, Clone)]
+pub struct TypeDef {
+    /// The declared type name.
+    pub name: Spanned<String>,
+
+    /// The fields that compose this type.
+    pub fields: Vec<Spanned<Param>>,
+
+    pub generics: Vec<Spanned<GenericParam>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct GenericParam {
+    pub name: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct AstTypeInfo {
+    pub base: Spanned<AstTypeBase>,
+    pub modifier: Spanned<AstTypeModifier>,
+    pub generics: Vec<Spanned<AstTypeInfo>>,
+}
+
+#[derive(Debug, Clone)]
+pub enum TypeFlags {
+    Array,
+}
+
+#[derive(Debug, Clone)]
+pub struct TypeName(pub String);
+
+impl TypeName {
+    pub fn inner(&self) -> &String {
+        &self.0
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum AstTypeBase {
+    Named(TypeName),
+    Array(Box<Spanned<AstTypeBase>>),
+}
+
+#[derive(Debug, Clone)]
+pub enum AstTypeModifier {
+    None,
+    Optional,
+    Fallible,
+    FallibleOptional,
+}
+
+impl AstTypeModifier {
+    pub fn from_token_kind(tk: TokenKind) -> Option<Self> {
+        match tk {
+            TokenKind::Not => Some(Self::Fallible),
+            TokenKind::Optional => Some(Self::Optional),
+            TokenKind::FallibleOptional => Some(Self::FallibleOptional),
+            _ => None,
+        }
+    }
+}
+
+/// Represents an import declaration.
+///
+/// Imports can include:
+/// - A module path (`path`)
+/// - An optional alias (`alias`)
+/// - An optional list of directly exposed symbols (`exposing`)
 #[derive(Debug, Clone)]
 pub struct ImportDef {
     /// The module path (e.g., `["Iris", "Data"]`).
-    pub path: Vec<String>,
+    pub path: Vec<Spanned<String>>,
+
     /// Optional alias (e.g., `as df`).
-    pub alias: Option<String>,
+    pub alias: Option<Spanned<String>>,
+
     /// List of symbols imported directly (e.g., `exposing (sum, count)`).
-    pub exposing: Vec<String>,
-}
-
-#[derive(Debug, Clone)]
-pub struct ModelDef {
-    pub name: String,
-    /// Fields defined in the model (e.g., `coefficients`, `rows`).
-    /// Types appear optional or inferred in your snippet.
-    pub fields: Vec<String>,
-    /// Methods defined inside the model block.
-    pub methods: Vec<FunctionDef>,
-}
-
-#[derive(Debug, Clone)]
-pub struct ExtendDef {
-    /// The name of the type being extended (e.g., `DataFrame`).
-    pub target: String,
-    /// The new methods being added.
-    pub methods: Vec<FunctionDef>,
+    pub exposing: Vec<Spanned<String>>,
 }
 
 /// Represents a function definition (used in methods or potentially top-level).
-/// Note: Your snippet uses `let x = lambda` mostly, but `plot() {}` inside models is a function def.
 #[derive(Debug, Clone)]
 pub struct FunctionDef {
-    pub name: String,
-    pub params: Vec<String>, // Parameter names
+    /// The function name.
+    pub name: Spanned<String>,
+
+    /// The return kind of the function.
+    pub return_kind: Spanned<AstTypeInfo>,
+
+    /// The declared function parameters.
+    pub params: Vec<Spanned<Param>>,
+
+    /// The function body block.
     pub body: Block,
 }

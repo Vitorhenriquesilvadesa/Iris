@@ -5,6 +5,7 @@ use std::ops::Range;
 use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
 
+use crate::module::ModuleId;
 use crate::source::line_index::LineIndex;
 
 /// Stable identifier for a source file.
@@ -20,6 +21,10 @@ impl SourceFileId {
         self.0
     }
 
+    pub fn from_module(id: &ModuleId) -> Self {
+        Self(id.as_u32())
+    }
+
     pub fn invalid() -> Self {
         Self(u32::MAX)
     }
@@ -30,7 +35,7 @@ impl SourceFileId {
 }
 
 /// Immutable source file owned by the compiler.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SourceFile {
     id: SourceFileId,
     path: PathBuf,
@@ -84,6 +89,16 @@ impl SourceFile {
         let index = self.line_index.get_or_init(|| LineIndex::new(&self.text));
 
         index.line_col(offset)
+    }
+
+    pub fn file_name(&self) -> Result<&str, String> {
+        let stem = self
+            .path
+            .file_stem()
+            .ok_or_else(|| "path does not contain a file name".to_string())?;
+
+        stem.to_str()
+            .ok_or_else(|| "file name is not valid UTF-8".to_string())
     }
 }
 

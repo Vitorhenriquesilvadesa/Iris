@@ -1,16 +1,16 @@
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::{Condvar, Mutex};
 
-use common::diagnostic::Diagnostics;
+use compiler_api::queries::{AnalysisResult, QueryResult};
 
 use crate::query::state::QueryState;
 
 #[derive(Debug)]
-pub struct QuerySlot<T> {
+pub struct QuerySlot<T: Clone> {
     state: Mutex<QueryState<T>>,
     ready: Condvar,
 }
 
-impl<T> QuerySlot<T> {
+impl<T: Clone> QuerySlot<T> {
     pub fn new() -> Self {
         Self {
             state: Mutex::new(QueryState::InProgress),
@@ -18,16 +18,16 @@ impl<T> QuerySlot<T> {
         }
     }
 
-    pub fn wait(&self) -> Result<Arc<T>, Arc<Diagnostics>> {
+    pub fn wait(&self) -> QueryResult<T> {
         let mut state = self.state.lock().unwrap();
 
         loop {
             match &*state {
-                QueryState::Completed(value) => {
-                    return Ok(value.clone());
+                QueryState::Completed(result) => {
+                    return Ok(result.clone());
                 }
-                QueryState::Failed(diags) => {
-                    return Err(diags.clone());
+                QueryState::Failed(error) => {
+                    return Err(error.clone());
                 }
                 QueryState::InProgress => {
                     state = self.ready.wait(state).unwrap();
@@ -36,15 +36,15 @@ impl<T> QuerySlot<T> {
         }
     }
 
-    pub fn complete(&self, value: Arc<T>) {
+    pub fn complete(&self, result: AnalysisResult<T>) {
         let mut state = self.state.lock().unwrap();
-        *state = QueryState::Completed(value);
+        *state = QueryState::Completed(result);
         self.ready.notify_all();
     }
 
-    pub fn fail(&self, diagnostics: Arc<Diagnostics>) {
+    pub fn fail(&self, error: String) {
         let mut state = self.state.lock().unwrap();
-        *state = QueryState::Failed(diagnostics);
+        *state = QueryState::Failed(error);
         self.ready.notify_all();
     }
 }

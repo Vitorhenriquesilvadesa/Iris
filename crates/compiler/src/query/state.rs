@@ -1,10 +1,8 @@
-use std::sync::Arc;
-
-use common::diagnostic::Diagnostics;
+use compiler_api::queries::AnalysisResult;
 
 #[derive(Debug, Clone)]
-pub enum QueryState<T> {
+pub enum QueryState<T: Clone> {
     InProgress,
-    Completed(Arc<T>),
-    Failed(Arc<Diagnostics>),
+    Completed(AnalysisResult<T>),
+    Failed(String),
 }

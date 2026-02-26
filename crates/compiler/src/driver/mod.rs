@@ -24,22 +24,32 @@ impl CompilerDriver {
     pub fn run(&self) -> bool {
         let ctx = CompilerContext::new();
 
-        ctx.attach_root_file(&self.options.root_file_path).unwrap();
-
-        match ctx.compile() {
-            Ok(o) => {
-                println!("{:#?}", o);
-                true
-            }
+        let root = match ctx.attach_root_file(&self.options.root_file_path) {
+            Ok(r) => r,
             Err(e) => {
-                let renderer = DiagnosticRenderer::new(ctx.source_map());
-
-                for diag in e.into_iter() {
-                    renderer.emit(diag);
-                }
-
-                false
+                eprintln!("{}", e);
+                return false;
             }
+        };
+
+        let output = match ctx.compile(*root.value) {
+            Err(e) => {
+                eprintln!("{}", e);
+                return false;
+            }
+            Ok(o) => o,
+        };
+
+        let diags = ctx.diagnostics.lock().unwrap();
+        if !diags.is_empty() {
+            let renderer = DiagnosticRenderer::new(ctx.source_map());
+            for diag in diags.into_iter() {
+                renderer.emit(diag);
+            }
+            false
+        } else {
+            println!("{:#?}", output.value);
+            true
         }
     }
 }

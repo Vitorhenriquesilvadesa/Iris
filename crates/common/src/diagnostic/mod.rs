@@ -148,8 +148,10 @@ impl Diagnostics {
         self.items.push(diagnostic);
     }
 
-    pub fn extend(&mut self, other: Diagnostics) {
-        self.items.extend(other.items);
+    pub fn extend(&mut self, other: &Diagnostics) {
+        for item in &other.items {
+            self.items.push(item.clone());
+        }
     }
 }
 

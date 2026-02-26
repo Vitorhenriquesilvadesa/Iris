@@ -1,9 +1,9 @@
 use common::{
     ast::{Ast, Spanned, item::ItemKind},
-    diagnostic::Diagnostic,
+    diagnostic::{Diagnostic, codes::UNEXPECTED_TOKEN},
     source::SourceFileId,
     span::Span,
-    token::TokenKind,
+    token::{Token, TokenKind},
 };
 
 mod diagnostic;
@@ -66,11 +66,44 @@ impl<'a> Parser<'a> {
         &self.stream
     }
 
-    pub(super) fn try_expect(&self, kinds: &[TokenKind]) -> bool {
+    pub(super) fn expect_bump_with_flag(
+        &mut self,
+        kind: TokenKind,
+        emmit_error: bool,
+    ) -> Option<&Token> {
+        let (current_kind, span) = match self.stream().peek() {
+            Some(tok) => (tok.kind, tok.span),
+            None => (TokenKind::Eof, Span::new(self.source_text.len(), 1)),
+        };
+
+        if current_kind == kind {
+            return self.stream_mut().bump();
+        }
+
+        if emmit_error {
+            self.report_error(
+                ParseError::Expected {
+                    expected: kind,
+                    found: current_kind,
+                    code: UNEXPECTED_TOKEN,
+                },
+                span,
+            );
+        }
+
+        None
+    }
+
+    pub(super) fn expect_bump(&mut self, kind: TokenKind) -> Option<&Token> {
+        self.expect_bump_with_flag(kind, true)
+    }
+
+    pub(super) fn try_expect(&mut self, kinds: &[TokenKind]) -> bool {
         match self.stream().peek_kind() {
             Some(kind) => {
                 for k in kinds {
                     if *k == kind {
+                        self.stream_mut().bump();
                         return true;
                     }
                 }
@@ -90,15 +123,14 @@ impl<'a> Parser<'a> {
             match kind {
                 Some(k) => match k {
                     TokenKind::Let
-                    | TokenKind::Model
                     | TokenKind::Import
-                    | TokenKind::IntLiteral
-                    | TokenKind::FloatLiteral
-                    | TokenKind::StringLiteral
+                    | TokenKind::Type
+                    | TokenKind::Int
+                    | TokenKind::Float
+                    | TokenKind::String
                     | TokenKind::Ident => return,
 
-                    TokenKind::RBrace | TokenKind::Semicolon => {
-                        self.stream.bump();
+                    TokenKind::RBrace => {
                         return;
                     }
                     _ => {
@@ -113,5 +145,16 @@ impl<'a> Parser<'a> {
     pub(super) fn report_error(&mut self, error: ParseError, span: Span) {
         let diagnostic = map_parse_error(error, self.source_id, span);
         self.diagnostics.push(diagnostic);
+    }
+
+    pub(super) fn report(&mut self, diag: Diagnostic) {
+        self.diagnostics.push(diag);
+    }
+
+    fn check(&self, kind: TokenKind) -> bool {
+        self.stream()
+            .peek()
+            .map(|t| t.kind == kind)
+            .unwrap_or(false)
     }
 }

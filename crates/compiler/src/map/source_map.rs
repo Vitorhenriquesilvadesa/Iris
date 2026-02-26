@@ -8,10 +8,10 @@ use std::{
 };
 
 use common::{
-    diagnostic::{Diagnostic, Diagnostics},
+    diagnostic::Diagnostics,
     source::{SourceFile, SourceFileId},
 };
-use compiler_api::queries::QueryResult;
+use compiler_api::queries::{AnalysisResult, QueryResult};
 use dashmap::DashMap;
 
 #[derive(Debug, Default)]
@@ -32,12 +32,15 @@ impl SourceMap {
 
     pub fn load_by_id(&self, id: SourceFileId) -> QueryResult<SourceFile> {
         if let Some(file) = self.files.get(&id) {
-            return Ok(file.clone());
+            return Ok(AnalysisResult {
+                value: file.clone(),
+                diagnostics: Arc::new(Diagnostics::new(vec![])),
+            });
         }
 
         let msg = format!("File with id '{}' not found in registry.", id.as_u32());
-        let diag = Diagnostic::error(msg);
-        Err(Arc::new(Diagnostics::single(diag)))
+        // let diag = Diagnostic::error(msg);
+        Err(msg)
     }
 
     pub fn load_file<P: Into<PathBuf>>(&self, path: P) -> QueryResult<SourceFile> {
@@ -46,15 +49,17 @@ impl SourceMap {
         if let Some(id) = self.paths.get(&path)
             && let Some(file) = self.files.get(&*id)
         {
-            return Ok(file.clone());
+            return Ok(AnalysisResult {
+                value: file.clone(),
+                diagnostics: Arc::new(Diagnostics::new(vec![])),
+            });
         }
 
         let text = match fs::read_to_string(&path) {
             Ok(t) => t,
             Err(e) => {
                 let msg = format!("Unable to read file '{}': {}", path.display(), e);
-                let diag = Diagnostic::error(msg);
-                return Err(Arc::new(Diagnostics::single(diag)));
+                return Err(msg);
             }
         };
 
@@ -66,6 +71,9 @@ impl SourceMap {
         self.files.insert(id, source_file.clone());
         self.paths.insert(path, id);
 
-        Ok(source_file)
+        Ok(AnalysisResult {
+            value: source_file,
+            diagnostics: Arc::new(Diagnostics::new(vec![])),
+        })
     }
 }

@@ -40,4 +40,5 @@ pub enum ParseError {
 
     /// A generic error message for parsing scenarios not covered by specific variants.
     Message(String),
+    InvalidParam,
 }

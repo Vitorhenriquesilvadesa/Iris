@@ -3,7 +3,7 @@ use std::ops::Range;
 /// Lazily-built line index for a source file.
 ///
 /// Stores the byte offset of the start of each line.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LineIndex {
     line_starts: Vec<usize>,
 }

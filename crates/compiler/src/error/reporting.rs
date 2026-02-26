@@ -32,11 +32,11 @@ impl<'a> DiagnosticRenderer<'a> {
         if let (Some(file_id), Some(span)) = (diag.file, diag.primary_span)
             && let Ok(file) = self.map.load_by_id(file_id)
         {
-            self.render_snippet(&file, span.start, span.end(), color, &diag.labels);
+            self.render_snippet(&file.value, span.start, span.end(), color, &diag.labels);
         }
 
         for note in &diag.notes {
-            eprintln!("  {} {}", "=".blue().bold(), note);
+            eprintln!("  {}: {}", "note".cyan().bold(), note);
         }
 
         eprintln!();
@@ -86,13 +86,11 @@ impl<'a> DiagnosticRenderer<'a> {
         if labels.is_empty() {
             eprintln!("{}", decoration_start);
         } else {
-            let mut separator = " ";
             eprint!("{}", decoration_start);
 
             for label in labels {
                 if let Some(msg) = &label.message {
-                    eprint!("{}", format!("{}{}", separator, msg).color(Color::Red));
-                    separator = "\n";
+                    eprintln!(" {}", msg.color(Color::Red));
                 }
             }
         }

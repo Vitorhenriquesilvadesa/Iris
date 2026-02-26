@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use common::{
     diagnostic::{Diagnostic, DiagnosticResult},
+    source::SourceFileId,
     token::{Token, TokenKind},
 };
 
@@ -11,14 +12,19 @@ use common::{
 pub struct TokenStream {
     tokens: Arc<Vec<Token>>,
     pos: usize,
+    source_id: SourceFileId,
 }
 
 #[derive(Debug, Copy, Clone)]
 pub struct Checkpoint(usize);
 
 impl TokenStream {
-    pub fn new(tokens: Arc<Vec<Token>>) -> Self {
-        Self { tokens, pos: 0 }
+    pub fn new(tokens: Arc<Vec<Token>>, source: SourceFileId) -> Self {
+        Self {
+            tokens,
+            pos: 0,
+            source_id: source,
+        }
     }
 
     pub fn position(&self) -> usize {
@@ -61,17 +67,30 @@ impl TokenStream {
         self.pos = checkpoint.0;
     }
 
+    pub fn last(&self) -> Option<&Token> {
+        self.tokens.last()
+    }
+
     pub fn expect(&mut self, kind: TokenKind) -> DiagnosticResult<&Token> {
         match self.peek() {
             Some(tok) if tok.kind == kind => Ok(self.bump().unwrap()),
             Some(tok) => Err(Box::new(
-                Diagnostic::error(format!("expected token {:?}, found {:?}", kind, tok.kind))
-                    .with_primary_span(tok.span),
+                Diagnostic::error(format!("expected token '{}', found '{}'", kind, tok.kind))
+                    .with_primary_span(tok.span)
+                    .with_label(tok.span, "unexpected token here")
+                    .with_file(self.source_id),
             )),
-            None => Err(Box::new(Diagnostic::error(format!(
-                "expected token {:?}, found end of file",
-                kind
-            )))),
+            None => {
+                let mut diag =
+                    Diagnostic::error(format!("expected token '{}', found 'end of file'", kind))
+                        .with_file(self.source_id);
+                if let Some(tok) = self.last() {
+                    diag = diag
+                        .with_primary_span(tok.span)
+                        .with_label(tok.span, "unexpected token here")
+                }
+                Err(Box::new(diag))
+            }
         }
     }
 }

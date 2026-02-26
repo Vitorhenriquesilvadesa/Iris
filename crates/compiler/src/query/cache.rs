@@ -3,14 +3,14 @@ use std::{hash::Hash, sync::Arc};
 use compiler_api::queries::QueryResult;
 use dashmap::DashMap;
 
-use crate::query::slot::QuerySlot;
+use crate::query::{reporter::ErrorReporter, slot::QuerySlot};
 
 #[derive(Debug)]
-pub struct QueryCache<K: Eq + Hash, T> {
+pub struct QueryCache<K: Eq + Hash, T: Clone> {
     slots: DashMap<K, Arc<QuerySlot<T>>>,
 }
 
-impl<K, T> QueryCache<K, T>
+impl<K, T: Clone> QueryCache<K, T>
 where
     K: Eq + Hash + Clone,
 {
@@ -20,8 +20,9 @@ where
         }
     }
 
-    pub fn get_or_compute<F>(&self, key: K, compute: F) -> QueryResult<T>
+    pub fn get_or_compute<F, Ctx>(&self, key: K, ctx: &Ctx, compute: F) -> QueryResult<T>
     where
+        Ctx: ErrorReporter,
         F: FnOnce() -> QueryResult<T>,
     {
         use dashmap::mapref::entry::Entry;
@@ -36,7 +37,10 @@ where
                 let result = compute();
 
                 match &result {
-                    Ok(value) => slot.complete(value.clone()),
+                    Ok(value) => {
+                        ctx.emit_diagnostics(&value.diagnostics);
+                        slot.complete(value.clone())
+                    }
                     Err(diags) => slot.fail(diags.clone()),
                 }
 

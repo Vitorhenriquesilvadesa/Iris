@@ -1,4 +1,6 @@
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+use crate::source::SourceFileId;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ModuleId(u32);
 
 impl ModuleId {
@@ -8,6 +10,10 @@ impl ModuleId {
 
     pub fn as_u32(self) -> u32 {
         self.0
+    }
+
+    pub fn from_file(file: &SourceFileId) -> Self {
+        Self(file.as_u32())
     }
 
     pub fn invalid() -> Self {

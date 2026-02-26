@@ -8,7 +8,10 @@ pub enum QueryKind {
     SourceText,
     Tokens,
     Ast,
+    Hir,
     SemanticModel,
+    Globals,
+    Module,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -50,6 +53,27 @@ impl QueryKey {
     pub fn ast(module: ModuleId) -> Self {
         Self {
             kind: QueryKind::Ast,
+            input: QueryInput::Module(module),
+        }
+    }
+
+    pub fn hir(module: ModuleId) -> Self {
+        Self {
+            kind: QueryKind::Hir,
+            input: QueryInput::Module(module),
+        }
+    }
+
+    pub fn module(module: ModuleId) -> Self {
+        Self {
+            kind: QueryKind::Module,
+            input: QueryInput::Module(module),
+        }
+    }
+
+    pub fn globals(module: ModuleId) -> Self {
+        Self {
+            kind: QueryKind::Globals,
             input: QueryInput::Module(module),
         }
     }
