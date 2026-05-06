@@ -2,21 +2,22 @@
 resolver = "2"
 
 members = [
-    "crates/common",
-    "crates/frontend",
-    "crates/semantics",
-    "crates/ir",
-    "crates/backend",
     "crates/vm",
     "crates/stdlib",
     "crates/tools",
-    "crates/compiler", "crates/compiler-api",
+    "crates/iris-driver",
+    "crates/iris-span",
+    "crates/iris-diagnostic",
+    "crates/iris-ast",
+    "crates/iris-hir",
+    "crates/iris-interner",
+    "crates/iris-syntax",
+    "crates/iris-lexer",
+    "crates/iris-parser",
+    "crates/iris-ast-lower",
+    "crates/iris-db",
 ]
 
-default-members = [
-    "crates/tools",
-]
+default-members = ["crates/tools"]
 
-exclude = [
-    "target",
-]
+exclude = ["target"]

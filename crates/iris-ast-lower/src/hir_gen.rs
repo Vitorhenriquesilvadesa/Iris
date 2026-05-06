@@ -1,0 +1,61 @@
+use iris_ast::Item;
+use iris_db::symbol::SymbolQueries;
+use iris_diagnostic::{Diagnostic, Diagnostics};
+use iris_hir::{
+    Hir,
+    item::{HirItem, ItemId},
+    statement::{HirStatement, StmtId},
+};
+use iris_span::source_file::SourceFileId;
+
+#[derive(Debug, Clone)]
+pub struct HirOutput {
+    pub value: Hir,
+    pub diagnostics: Diagnostics,
+}
+
+#[derive(Debug, Clone)]
+pub struct HirGenerator<'a, Ctx>
+where
+    Ctx: SymbolQueries,
+{
+    pub(crate) hir: Hir,
+    pub(crate) items: &'a [Item],
+    pub(crate) ctx: &'a Ctx,
+    pub(crate) source_file_id: SourceFileId,
+    pub(crate) diagnostics: Vec<Diagnostic>,
+}
+
+impl<'a, Ctx> HirGenerator<'a, Ctx>
+where
+    Ctx: SymbolQueries,
+{
+    pub fn new(id: SourceFileId, items: &'a [Item], ctx: &'a Ctx) -> Self {
+        Self {
+            hir: Hir::new(),
+            items,
+            ctx,
+            source_file_id: id,
+            diagnostics: vec![],
+        }
+    }
+
+    pub(crate) fn gen_hir(&mut self) -> HirOutput {
+        for i in self.items {
+            self.gen_hir_for(i);
+        }
+
+        HirOutput {
+            value: self.hir.clone(),
+            diagnostics: Diagnostics::new(self.diagnostics.clone()),
+        }
+    }
+
+    pub(crate) fn allocate_item(&mut self, item: HirItem) -> ItemId {
+        self.hir.allocate_item(item)
+    }
+
+    pub(crate) fn allocate_stmt(&mut self, item: HirStatement) -> StmtId {
+        self.hir.allocate_stmt(item)
+    }
+}

@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iris — Backend Language Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0e14;
+  --surface: #111622;
+  --surface2: #161d2e;
+  --border: #1e2840;
+  --border2: #243050;
+  --iris: #7c6af7;
+  --iris-light: #a78bfa;
+  --iris-glow: #7c6af730;
+  --green: #4ade80;
+  --yellow: #facc15;
+  --red: #f87171;
+  --blue: #60a5fa;
+  --orange: #fb923c;
+  --pink: #f472b6;
+  --muted: #4a5578;
+  --text: #c8d3f5;
+  --text-dim: #637089;
+  --text-bright: #e8eeff;
+  --sidebar-w: 260px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ─── TOPBAR ─── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 56px;
+  background: #0b0e14ee;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 1.5rem;
+  gap: 1rem;
+}
+
+.topbar-logo {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--iris), #a78bfa);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700; font-size: 0.85rem;
+  color: white;
+  box-shadow: 0 0 16px var(--iris-glow);
+  flex-shrink: 0;
+}
+
+.logo-name {
+  font-size: 1.1rem; font-weight: 800;
+  color: var(--text-bright);
+  letter-spacing: -0.02em;
+}
+
+.logo-version {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--iris);
+  background: var(--iris-glow);
+  padding: 2px 7px; border-radius: 99px;
+  border: 1px solid #7c6af740;
+}
+
+.topbar-search {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-width: 200px;
+}
+.topbar-search:hover { border-color: var(--iris); }
+.topbar-search kbd {
+  margin-left: auto;
+  background: var(--border);
+  padding: 1px 5px; border-radius: 4px;
+  font-size: 0.65rem; color: var(--muted);
+}
+
+.topbar-links {
+  display: flex; gap: 4px;
+}
+.topbar-link {
+  padding: 5px 12px; border-radius: 6px;
+  font-size: 0.8rem; font-weight: 600;
+  color: var(--text-dim); cursor: pointer;
+  transition: all 0.15s; text-decoration: none;
+  border: none; background: none; font-family: 'Syne', sans-serif;
+}
+.topbar-link:hover { color: var(--text); background: var(--surface); }
+.topbar-link.active { color: var(--iris-light); }
+
+/* ─── LAYOUT ─── */
+.layout {
+  display: flex;
+  margin-top: 56px;
+  min-height: calc(100vh - 56px);
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  position: fixed;
+  top: 56px; left: 0; bottom: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  padding: 1.5rem 0;
+  background: var(--bg);
+}
+
+.sidebar-section {
+  margin-bottom: 1.5rem;
+}
+
+.sidebar-heading {
+  font-size: 0.62rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--text-dim);
+  padding: 0 1.25rem;
+  margin-bottom: 4px;
+}
+
+.sidebar-link {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 1.25rem;
+  font-size: 0.82rem; font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  border-left: 2px solid transparent;
+}
+.sidebar-link:hover { color: var(--text); background: #ffffff05; }
+.sidebar-link.active {
+  color: var(--iris-light);
+  background: var(--iris-glow);
+  border-left-color: var(--iris);
+}
+.sidebar-link .dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--border2); flex-shrink: 0;
+  transition: background 0.15s;
+}
+.sidebar-link:hover .dot { background: var(--muted); }
+.sidebar-link.active .dot { background: var(--iris); }
+
+/* ─── MAIN CONTENT ─── */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  max-width: 820px;
+  padding: 3rem 3rem 6rem;
+}
+
+/* ─── RIGHT TOC ─── */
+.toc {
+  width: 200px;
+  flex-shrink: 0;
+  position: fixed;
+  top: 56px; right: 0; bottom: 0;
+  padding: 2rem 1.25rem;
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  display: none;
+}
+
+@media (min-width: 1200px) {
+  .toc { display: block; }
+  .main { max-width: none; padding-right: 240px; }
+}
+
+.toc-title {
+  font-size: 0.62rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--text-dim); margin-bottom: 8px;
+}
+.toc-link {
+  display: block; padding: 3px 0;
+  font-size: 0.75rem; color: var(--text-dim);
+  text-decoration: none; transition: color 0.15s;
+}
+.toc-link:hover { color: var(--iris-light); }
+.toc-link.sub { padding-left: 10px; font-size: 0.72rem; }
+
+/* ─── SECTIONS ─── */
+.doc-section {
+  display: none;
+  animation: fadeUp 0.35s cubic-bezier(.16,1,.3,1) both;
+}
+.doc-section.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ─── TYPOGRAPHY ─── */
+.page-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem; color: var(--iris);
+  text-transform: uppercase; letter-spacing: 0.12em;
+  margin-bottom: 0.5rem;
+}
+
+h1.page-title {
+  font-size: 2.4rem; font-weight: 800;
+  color: var(--text-bright);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+
+.page-lead {
+  font-size: 1rem; line-height: 1.7;
+  color: var(--text-dim);
+  margin-bottom: 2.5rem;
+  max-width: 600px;
+}
+
+h2.section-title {
+  font-size: 1.3rem; font-weight: 700;
+  color: var(--text-bright);
+  margin: 2.5rem 0 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+h2.section-title::before {
+  content: '';
+  width: 3px; height: 18px;
+  background: var(--iris);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+h3.subsection-title {
+  font-size: 1rem; font-weight: 700;
+  color: var(--text);
+  margin: 1.75rem 0 0.75rem;
+}
+
+p { line-height: 1.75; color: var(--text); margin-bottom: 1rem; font-size: 0.9rem; }
+p:last-child { margin-bottom: 0; }
+
+/* ─── CODE ─── */
+code {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8em;
+  background: var(--surface2);
+  padding: 1px 7px; border-radius: 4px;
+  color: var(--iris-light);
+  border: 1px solid var(--border);
+}
+
+pre {
+  background: #080b10;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 1rem 0;
+  position: relative;
+}
+
+.pre-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px;
+  background: #0d1118;
+  border-bottom: 1px solid var(--border);
+}
+
+.pre-lang {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+
+.pre-dots { display: flex; gap: 5px; }
+.pre-dot { width: 10px; height: 10px; border-radius: 50%; }
+.pre-dot:nth-child(1) { background: #f87171; }
+.pre-dot:nth-child(2) { background: #facc15; }
+.pre-dot:nth-child(3) { background: #4ade80; }
+
+.pre-copy {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem; color: var(--text-dim);
+  background: none; border: 1px solid var(--border);
+  padding: 3px 8px; border-radius: 4px;
+  cursor: pointer; transition: all 0.15s;
+}
+.pre-copy:hover { border-color: var(--iris); color: var(--iris-light); }
+
+pre code {
+  display: block;
+  padding: 1.25rem 1.5rem;
+  font-size: 0.82rem;
+  line-height: 1.9;
+  color: var(--text);
+  background: none;
+  border: none;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* syntax highlight classes */
+.k { color: #7c6af7; }         /* keyword */
+.t { color: #60a5fa; }         /* type */
+.s { color: #4ade80; }         /* string/number */
+.c { color: #3d4f6e; font-style: italic; }  /* comment */
+.n { color: #f59e0b; }         /* function name */
+.p { color: #94a3b8; }         /* punctuation */
+.at { color: #fb923c; }        /* annotation */
+.e { color: #f87171; }         /* error variant */
+.m { color: #f472b6; }         /* macro/special */
+
+/* ─── INFO BOXES ─── */
+.callout {
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
+  font-size: 0.85rem; line-height: 1.7;
+  display: flex; gap: 10px;
+}
+.callout-icon { flex-shrink: 0; font-size: 1rem; margin-top: 1px; }
+.callout.info { background: #60a5fa10; border: 1px solid #60a5fa30; color: var(--text); }
+.callout.warn { background: #facc1510; border: 1px solid #facc1530; color: var(--text); }
+.callout.tip  { background: #4ade8010; border: 1px solid #4ade8030; color: var(--text); }
+.callout.iris { background: var(--iris-glow); border: 1px solid #7c6af740; color: var(--text); }
+
+/* ─── TABLE ─── */
+.table-wrap { overflow-x: auto; margin: 1rem 0; border-radius: 10px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+th {
+  text-align: left; padding: 9px 14px;
+  background: var(--surface);
+  color: var(--text-dim); font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 9px 14px; border-bottom: 1px solid #1a2035; vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #ffffff04; }
+td:first-child { font-family: 'Space Mono', monospace; color: var(--iris-light); font-size: 0.8rem; }
+
+/* ─── FEATURE GRID ─── */
+.feature-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem; margin: 1.5rem 0;
+}
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.feature-card:hover { border-color: var(--iris); transform: translateY(-2px); }
+.feature-icon { font-size: 1.4rem; margin-bottom: 8px; }
+.feature-title { font-size: 0.85rem; font-weight: 700; color: var(--text-bright); margin-bottom: 4px; }
+.feature-desc { font-size: 0.78rem; color: var(--text-dim); line-height: 1.5; }
+
+/* ─── TYPE PILLS ─── */
+.type-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 1rem 0; }
+.type-pill {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.78rem;
+  padding: 4px 12px; border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--iris-light);
+  display: flex; align-items: center; gap: 6px;
+}
+.type-pill .desc { color: var(--text-dim); font-family: 'Syne', sans-serif; font-size: 0.72rem; }
+
+/* ─── HERO ─── */
+.hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; top: -80px; right: -80px;
+  width: 300px; height: 300px;
+  background: radial-gradient(ellipse, var(--iris-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-tagline {
+  font-size: 0.78rem; color: var(--iris);
+  font-family: 'Space Mono', monospace;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.hero h2 { font-size: 1.6rem; font-weight: 800; color: var(--text-bright); margin-bottom: 0.75rem; letter-spacing: -0.02em; }
+.hero p { font-size: 0.88rem; color: var(--text-dim); line-height: 1.7; margin-bottom: 1.25rem; }
+.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn {
+  padding: 8px 18px; border-radius: 8px;
+  font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
+  border: none; font-family: 'Syne', sans-serif;
+  text-decoration: none; display: inline-block;
+}
+.btn-primary { background: var(--iris); color: white; }
+.btn-primary:hover { background: var(--iris-light); box-shadow: 0 4px 20px var(--iris-glow); }
+.btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.btn-outline:hover { border-color: var(--iris); color: var(--iris-light); }
+
+/* ─── INLINE CODE EXAMPLE ─── */
+.split-demo {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1rem; margin: 1rem 0;
+}
+@media (max-width: 700px) { .split-demo { grid-template-columns: 1fr; } }
+
+.split-label {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; margin-bottom: 6px;
+}
+.split-label.good { color: var(--green); }
+.split-label.bad { color: var(--red); }
+
+/* ─── BADGE ─── */
+.badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem; font-weight: 700;
+  padding: 2px 8px; border-radius: 4px;
+  display: inline-block;
+}
+.badge.new { background: #4ade8020; color: var(--green); border: 1px solid #4ade8040; }
+.badge.wip { background: #facc1520; color: var(--yellow); border: 1px solid #facc1540; }
+.badge.exp { background: #f8717120; color: var(--red); border: 1px solid #f8717140; }
+
+/* ─── HR ─── */
+hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+/* ─── LIST ─── */
+ul.doc-list { list-style: none; padding: 0; margin: 0.75rem 0; }
+ul.doc-list li {
+  padding: 5px 0;
+  padding-left: 16px;
+  position: relative;
+  font-size: 0.85rem; line-height: 1.6; color: var(--text);
+}
+ul.doc-list li::before {
+  content: '→'; position: absolute; left: 0;
+  color: var(--iris); font-size: 0.75rem;
+}
+
+/* ─── FOOTER ─── */
+.doc-footer {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 1rem;
+}
+.footer-text { font-size: 0.75rem; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+.footer-nav { display: flex; gap: 1rem; }
+.footer-nav a {
+  font-size: 0.78rem; color: var(--text-dim); text-decoration: none;
+  display: flex; align-items: center; gap: 6px;
+  transition: color 0.15s;
+}
+.footer-nav a:hover { color: var(--iris-light); }
+.footer-nav a .arrow { color: var(--iris); }
+
+/* ─── MOBILE ─── */
+@media (max-width: 800px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; padding: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a class="topbar-logo" href="#" onclick="showSection('intro')">
+    <div class="logo-mark">Ir</div>
+    <span class="logo-name">Iris</span>
+    <span class="logo-version">v0.1-alpha</span>
+  </a>
+  <div class="topbar-links">
+    <a class="topbar-link active" href="#" onclick="showSection('intro')">Docs</a>
+    <a class="topbar-link" href="#">GitHub</a>
+    <a class="topbar-link" href="#">Playground</a>
+  </div>
+  <div class="topbar-search" onclick="alert('Search coming soon!')">
+    <span>⌕</span>
+    <span>Search docs...</span>
+    <kbd>⌘K</kbd>
+  </div>
+</nav>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">Getting Started</div>
+    <a class="sidebar-link active" onclick="showSection('intro')"><span class="dot"></span>Introduction</a>
+    <a class="sidebar-link" onclick="showSection('install')"><span class="dot"></span>Installation</a>
+    <a class="sidebar-link" onclick="showSection('quickstart')"><span class="dot"></span>Quick Start</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">Language</div>
+    <a class="sidebar-link" onclick="showSection('types')"><span class="dot"></span>Types & Variables</a>
+    <a class="sidebar-link" onclick="showSection('functions')"><span class="dot"></span>Functions</a>
+    <a class="sidebar-link" onclick="showSection('errors')"><span class="dot"></span>Error Handling</a>
+    <a class="sidebar-link" onclick="showSection('pattern')"><span class="dot"></span>Pattern Matching</a>
+    <a class="sidebar-link" onclick="showSection('structs')"><span class="dot"></span>Types & Structs</a>
+    <a class="sidebar-link" onclick="showSection('generics')"><span class="dot"></span>Generics</a>
+    <a class="sidebar-link" onclick="showSection('traits')"><span class="dot"></span>Traits</a>
+    <a class="sidebar-link" onclick="showSection('metatypes')"><span class="dot"></span>Metatypes</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">Standard Library</div>
+    <a class="sidebar-link" onclick="showSection('std-io')"><span class="dot"></span>std::io</a>
+    <a class="sidebar-link" onclick="showSection('std-http')"><span class="dot"></span>std::http</a>
+    <a class="sidebar-link" onclick="showSection('std-collections')"><span class="dot"></span>std::collections</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-heading">Reference</div>
+    <a class="sidebar-link" onclick="showSection('keywords')"><span class="dot"></span>Keywords</a>
+    <a class="sidebar-link" onclick="showSection('operators')"><span class="dot"></span>Operators</a>
+  </div>
+
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- ═══ INTRODUCTION ═══ -->
+<section class="doc-section active" id="intro">
+  <div class="page-label">// getting-started</div>
+  <h1 class="page-title">Welcome to Iris</h1>
+  <p class="page-lead">Iris is a statically-typed backend language that runs on a dedicated VM. Designed for expressive error handling, declarative routing, and clean generics — without the noise.</p>
+
+  <div class="hero">
+    <div class="hero-tagline">// designed for the backend</div>
+    <h2>Expressive. Safe. Elegant.</h2>
+    <p>Iris combines a powerful type system with first-class error handling, metatype-driven reflection, and a clean syntax inspired by the best of modern languages — without their baggage.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" onclick="showSection('quickstart')">Quick Start →</a>
+      <a class="btn btn-outline" onclick="showSection('install')">Install</a>
+    </div>
+  </div>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">VM-based Runtime</div>
+      <div class="feature-desc">Runs on a dedicated bytecode VM. Fast startup, portable, and inspectable.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <div class="feature-title">Typed Error Handling</div>
+      <div class="feature-desc">First-class <code>!</code> and <code>?</code> type modifiers. No exceptions, no panics.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏷️</div>
+      <div class="feature-title">Metatypes</div>
+      <div class="feature-desc">Attach typed metadata to functions. Access it at runtime with zero magic.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧩</div>
+      <div class="feature-title">Generics & Traits</div>
+      <div class="feature-desc">Parametric types and trait-based dispatch. Clean, no lifetime annotations.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔁</div>
+      <div class="feature-title">Pattern Matching</div>
+      <div class="feature-desc">Full <code>match</code> with ranges, nullability, and exhaustive checks.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📦</div>
+      <div class="feature-title">Module System</div>
+      <div class="feature-desc">Scoped imports via <code>std::{ io, http }</code>. Clean namespacing by default.</div>
+    </div>
+  </div>
+
+  <h2 class="section-title">A first look</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">import</span> std::{ io, http };
+
+<span class="at">@Metatype</span>
+<span class="k">type</span> <span class="t">Get</span> {
+    path: <span class="t">String</span>
+}
+
+<span class="at">@Get</span>(path = <span class="s">"/user"</span>)
+<span class="k">fn</span> <span class="n">getUser</span>() -> <span class="t">HttpResponse</span>? {
+    <span class="c">// Return a response or Null</span>
+}
+
+<span class="k">error</span> <span class="t">MathError</span> { DivisionByZero }
+
+<span class="k">fn</span> <span class="n">divide</span>(a: <span class="t">Float</span>, b: <span class="t">Float</span>) -> <span class="t">Float</span>! {
+    <span class="k">if</span> b == <span class="s">0</span> {
+        <span class="k">return</span> .<span class="e">DivisionByZero</span>;
+    }
+    <span class="k">return</span> a / b;
+}
+
+<span class="k">fn</span> <span class="n">main</span>() -> <span class="t">Void</span>! {
+    <span class="k">let</span> result = <span class="n">divide</span>(<span class="s">10</span>, <span class="s">0</span>) <span class="k">catch</span> <span class="s">-1</span>;
+    <span class="k">try</span> io.<span class="n">println</span>(result);
+}</code></pre>
+
+</section>
+
+<!-- ═══ INSTALLATION ═══ -->
+<section class="doc-section" id="install">
+  <div class="page-label">// getting-started</div>
+  <h1 class="page-title">Installation</h1>
+  <p class="page-lead">Install the Iris VM and toolchain on your machine. Currently supports Linux and macOS.</p>
+
+  <div class="callout warn">
+    <span class="callout-icon">⚠</span>
+    <div>Iris is currently in <strong>alpha</strong>. The language specification is not yet stable. Use in production at your own risk.</div>
+  </div>
+
+  <h2 class="section-title">via curl (recommended)</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">shell</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code>curl -fsSL https://iris-lang.dev/install.sh | sh</code></pre>
+
+  <h2 class="section-title">Manual build</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">shell</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code>git clone https://github.com/iris-lang/iris
+cd iris
+make build
+export PATH="$PATH:$(pwd)/bin"</code></pre>
+
+  <h2 class="section-title">Verify installation</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">shell</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code>iris --version
+<span class="c"># iris 0.1.0-alpha (vm build 2024-01)</span></code></pre>
+
+  <div class="callout tip">
+    <span class="callout-icon">💡</span>
+    <div>VS Code extension with syntax highlighting is available at <code>ext install iris-lang.iris-vscode</code>.</div>
+  </div>
+</section>
+
+<!-- ═══ QUICKSTART ═══ -->
+<section class="doc-section" id="quickstart">
+  <div class="page-label">// getting-started</div>
+  <h1 class="page-title">Quick Start</h1>
+  <p class="page-lead">Build and run your first Iris program in under 5 minutes.</p>
+
+  <h2 class="section-title">Create a project</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">shell</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code>iris new my-app
+cd my-app</code></pre>
+
+  <p>This creates the following structure:</p>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">tree</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code>my-app/
+├── iris.toml        <span class="c"># project manifest</span>
+├── src/
+│   └── main.iris   <span class="c"># entry point</span>
+└── .gitignore</code></pre>
+
+  <h2 class="section-title">Hello, World</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris · src/main.iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">import</span> std::io;
+
+<span class="k">fn</span> <span class="n">main</span>() -> <span class="t">Void</span>! {
+    <span class="k">try</span> io.<span class="n">println</span>(<span class="s">"Hello, World!"</span>);
+}</code></pre>
+
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">shell</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code>iris run src/main.iris
+<span class="c"># Hello, World!</span></code></pre>
+
+  <h2 class="section-title">A minimal HTTP server</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">import</span> std::{ io, http };
+
+<span class="at">@Metatype</span>
+<span class="k">type</span> <span class="t">Get</span> { path: <span class="t">String</span> }
+
+<span class="at">@Get</span>(path = <span class="s">"/ping"</span>)
+<span class="k">fn</span> <span class="n">ping</span>() -> <span class="t">HttpResponse</span>? {
+    <span class="k">return</span> http.<span class="n">ok</span>(<span class="s">"pong"</span>);
+}
+
+<span class="k">fn</span> <span class="n">main</span>() -> <span class="t">Void</span>! {
+    <span class="k">let</span> server = <span class="k">try</span> http.<span class="n">serve</span>(port: <span class="s">8080</span>);
+    <span class="k">try</span> io.<span class="n">println</span>(<span class="s">"Listening on :8080"</span>);
+    <span class="k">try</span> server.<span class="n">run</span>();
+}</code></pre>
+
+</section>
+
+<!-- ═══ TYPES ═══ -->
+<section class="doc-section" id="types">
+  <div class="page-label">// language</div>
+  <h1 class="page-title">Types & Variables</h1>
+  <p class="page-lead">Iris is statically typed with local type inference. Every variable has a known type at compile time.</p>
+
+  <h2 class="section-title">Primitive types</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Type</th><th>Description</th><th>Example</th></tr>
+      <tr><td>Int</td><td>64-bit signed integer</td><td><code>let x: Int = 42</code></td></tr>
+      <tr><td>Float</td><td>64-bit float</td><td><code>let f: Float = 3.14</code></td></tr>
+      <tr><td>Bool</td><td>Boolean</td><td><code>let b: Bool = true</code></td></tr>
+      <tr><td>String</td><td>UTF-8 string</td><td><code>let s: String = "hi"</code></td></tr>
+      <tr><td>Void</td><td>No return value</td><td><code>fn f() -> Void</code></td></tr>
+      <tr><td>Null</td><td>Absence of value</td><td><code>let n = Null</code></td></tr>
+    </table>
+  </div>
+
+  <h2 class="section-title">Type modifiers</h2>
+  <p>Iris uses postfix modifiers to express nullability and fallibility at the type level:</p>
+  <div class="type-row">
+    <div class="type-pill">T <span class="desc">— always present</span></div>
+    <div class="type-pill">T? <span class="desc">— nullable</span></div>
+    <div class="type-pill">T! <span class="desc">— may error</span></div>
+    <div class="type-pill">T!? <span class="desc">— nullable AND may error</span></div>
+  </div>
+
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">fn</span> <span class="n">alwaysInt</span>()   -> <span class="t">Int</span>    { <span class="k">return</span> <span class="s">1</span>; }
+<span class="k">fn</span> <span class="n">maybeInt</span>()    -> <span class="t">Int</span>?   { <span class="k">return</span> <span class="t">Null</span>; }
+<span class="k">fn</span> <span class="n">riskyInt</span>()    -> <span class="t">Int</span>!   { <span class="k">return</span> .<span class="e">SomeError</span>; }
+<span class="k">fn</span> <span class="n">bothInt</span>()     -> <span class="t">Int</span>!?  { <span class="k">return</span> <span class="t">Null</span>; }</code></pre>
+
+  <h2 class="section-title">Variable declaration</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="c">// Explicit type</span>
+<span class="k">let</span> x: <span class="t">Int</span> = <span class="s">42</span>;
+
+<span class="c">// Inferred type</span>
+<span class="k">let</span> y = <span class="s">42</span>;           <span class="c">// Int</span>
+<span class="k">let</span> name = <span class="s">"Iris"</span>;    <span class="c">// String</span>
+<span class="k">let</span> nums = [<span class="s">1</span>, <span class="s">2</span>, <span class="s">3</span>]; <span class="c">// []Int</span>
+
+<span class="c">// Explicit array type</span>
+<span class="k">let</span> ids: []<span class="t">Int</span> = [<span class="s">1</span>, <span class="s">2</span>, <span class="s">3</span>];</code></pre>
+
+  <div class="callout info">
+    <span class="callout-icon">ℹ</span>
+    <div>All variables in Iris are immutable by default. Mutability modifiers are planned for a future release.</div>
+  </div>
+
+</section>
+
+<!-- ═══ FUNCTIONS ═══ -->
+<section class="doc-section" id="functions">
+  <div class="page-label">// language</div>
+  <h1 class="page-title">Functions</h1>
+  <p class="page-lead">Functions are first-class citizens in Iris. They support generics, typed returns, and can carry metadata via metatypes.</p>
+
+  <h2 class="section-title">Basic syntax</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">fn</span> <span class="n">add</span>(a: <span class="t">Int</span>, b: <span class="t">Int</span>) -> <span class="t">Int</span> {
+    <span class="k">return</span> a + b;
+}
+
+<span class="c">// Nullable return</span>
+<span class="k">fn</span> <span class="n">findUser</span>(id: <span class="t">Int</span>) -> <span class="t">User</span>? {
+    <span class="c">// ...</span>
+}
+
+<span class="c">// Fallible return</span>
+<span class="k">fn</span> <span class="n">parseJson</span>(raw: <span class="t">String</span>) -> <span class="t">Json</span>! {
+    <span class="c">// ...</span>
+}</code></pre>
+
+  <h2 class="section-title">Functions as values</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="c">// Function type annotation</span>
+<span class="k">let</span> handler: <span class="k">fn</span>() -> <span class="t">HttpResponse</span>? = <span class="n">getUser</span>;
+
+<span class="c">// Passing functions as arguments</span>
+<span class="k">fn</span> <span class="n">applyTwice</span>(f: <span class="k">fn</span>(<span class="t">Int</span>) -> <span class="t">Int</span>, x: <span class="t">Int</span>) -> <span class="t">Int</span> {
+    <span class="k">return</span> <span class="n">f</span>(<span class="n">f</span>(x));
+}</code></pre>
+
+  <h2 class="section-title">Named parameters</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">fn</span> <span class="n">connect</span>(host: <span class="t">String</span>, port: <span class="t">Int</span>) -> <span class="t">Conn</span>! { ... }
+
+<span class="c">// Call with named params</span>
+<span class="k">let</span> conn = <span class="k">try</span> <span class="n">connect</span>(host: <span class="s">"localhost"</span>, port: <span class="s">5432</span>);</code></pre>
+
+</section>
+
+<!-- ═══ ERRORS ═══ -->
+<section class="doc-section" id="errors">
+  <div class="page-label">// language</div>
+  <h1 class="page-title">Error Handling</h1>
+  <p class="page-lead">Iris handles errors at the type level. No exceptions, no panics. Errors are declared, returned, and handled explicitly.</p>
+
+  <h2 class="section-title">Declaring errors</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">error</span> <span class="t">MathError</span> {
+    DivisionByZero,
+    Overflow
+}
+
+<span class="k">error</span> <span class="t">DatabaseError</span> {
+    ConnectionFailed,
+    QueryFailed,
+    NotFound
+}</code></pre>
+
+  <h2 class="section-title">Returning errors</h2>
+  <p>Use dot-prefix shorthand to return an error variant:</p>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">fn</span> <span class="n">divide</span>(a: <span class="t">Float</span>, b: <span class="t">Float</span>) -> <span class="t">Float</span>! {
+    <span class="k">if</span> b == <span class="s">0</span> {
+        <span class="k">return</span> .<span class="e">DivisionByZero</span>;  <span class="c">// shorthand for MathError.DivisionByZero</span>
+    }
+    <span class="k">return</span> a / b;
+}</code></pre>
+
+  <h2 class="section-title">Handling errors</h2>
+
+  <h3 class="subsection-title">catch — provide a fallback value</h3>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">let</span> result = <span class="n">divide</span>(<span class="s">10.0</span>, <span class="s">0.0</span>) <span class="k">catch</span> <span class="s">-1.0</span>;</code></pre>
+
+  <h3 class="subsection-title">try — propagate error to caller</h3>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">fn</span> <span class="n">compute</span>() -> <span class="t">Float</span>! {
+    <span class="k">let</span> x = <span class="k">try</span> <span class="n">divide</span>(<span class="s">10.0</span>, <span class="s">2.0</span>);  <span class="c">// propagates on error</span>
+    <span class="k">return</span> x * <span class="s">2.0</span>;
+}</code></pre>
+
+  <h3 class="subsection-title">match — exhaustive error handling</h3>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">let</span> val = <span class="k">match</span> <span class="n">divide</span>(<span class="s">10.0</span>, <span class="s">0.0</span>) {
+    <span class="t">Ok</span>(v)               => v,
+    <span class="e">Err</span>(.DivisionByZero) => <span class="s">0.0</span>,
+    <span class="e">Err</span>(.Overflow)       => <span class="t">Float</span>.MAX
+};</code></pre>
+
+  <h2 class="section-title">The T!? type</h2>
+  <p>A function returning <code>T!?</code> can produce a value, <code>Null</code>, or an error — all handled distinctly:</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Type</th><th>Semantics</th><th>Result Set</th></tr>
+      <tr><td>T</td><td>Always returns T</td><td><code>{value}</code></td></tr>
+      <tr><td>T?</td><td>May be absent</td><td><code>{value, Null}</code></td></tr>
+      <tr><td>T!</td><td>May fail</td><td><code>{value, error}</code></td></tr>
+      <tr><td>T!?</td><td>May be absent OR fail</td><td><code>{value, Null, error}</code></td></tr>
+    </table>
+  </div>
+
+</section>
+
+<!-- ═══ PATTERN MATCHING ═══ -->
+<section class="doc-section" id="pattern">
+  <div class="page-label">// language</div>
+  <h1 class="page-title">Pattern Matching</h1>
+  <p class="page-lead">The <code>match</code> expression in Iris is exhaustive, supports ranges, and works seamlessly with nullable and error types.</p>
+
+  <h2 class="section-title">Basic match</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">let</span> label = <span class="k">match</span> score {
+    <span class="s">90</span>..<span class="s">100</span> => <span class="s">"A"</span>,
+    <span class="s">80</span>..<span class="s">89</span>  => <span class="s">"B"</span>,
+    <span class="s">70</span>..<span class="s">79</span>  => <span class="s">"C"</span>,
+    _       => <span class="s">"F"</span>
+};</code></pre>
+
+  <h2 class="section-title">match is an expression</h2>
+  <p>Match arms are expressions — no <code>return</code> needed inside arms:</p>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">return</span> <span class="k">match</span> a {
+    <span class="s">1</span>    => <span class="t">Null</span>,
+    <span class="s">1</span>..<span class="s">9</span> => self.<span class="n">get</span>(a),
+    _    => .<span class="e">SomeError</span>
+};</code></pre>
+
+  <div class="callout warn">
+    <span class="callout-icon">⚠</span>
+    <div>Do not use <code>return</code> inside match arms — the match expression itself is the value. Using <code>return</code> inside arms is a syntax error in Iris.</div>
+  </div>
+
+  <h2 class="section-title">Matching nullable</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">let</span> user: <span class="t">User</span>? = <span class="n">findUser</span>(<span class="s">42</span>);
+
+<span class="k">match</span> user {
+    <span class="t">Null</span>   => <span class="k">try</span> io.<span class="n">println</span>(<span class="s">"not found"</span>),
+    u      => <span class="k">try</span> io.<span class="n">println</span>(u.name)
+};</code></pre>
+
+</section>
+
+<!-- ═══ STRUCTS ═══ -->
+<section class="doc-section" id="structs">
+  <div class="page-label">// language</div>
+  <h1 class="page-title">Types & Structs</h1>
+  <p class="page-lead">Iris uses <code>type</code> to declare structured data. Methods are defined separately via <code>impl</code>.</p>
+
+  <h2 class="section-title">Declaring a type</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">type</span> <span class="t">User</span> {
+    id:    <span class="t">Int</span>,
+    name:  <span class="t">String</span>,
+    email: <span class="t">String</span>?
+}</code></pre>
+
+  <h2 class="section-title">Implementing methods</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">impl</span> <span class="t">User</span> {
+    <span class="k">fn</span> <span class="n">new</span>(id: <span class="t">Int</span>, name: <span class="t">String</span>) -> <span class="t">Self</span> {
+        <span class="k">return</span> <span class="t">Self</span> {
+            id:    id,
+            name:  name,
+            email: <span class="t">Null</span>
+        };
+    }
+
+    <span class="k">fn</span> <span class="n">greet</span>(self) -> <span class="t">String</span> {
+        <span class="k">return</span> <span class="s">"Hello, "</span> + self.name;
+    }
+}
+
+<span class="k">let</span> u = <span class="t">User</span>::<span class="n">new</span>(<span class="s">1</span>, <span class="s">"Alice"</span>);
+<span class="k">try</span> io.<span class="n">println</span>(u.<span class="n">greet</span>());</code></pre>
+
+  <h2 class="section-title">Instantiation</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">let</span> u = <span class="t">User</span> {
+    id:    <span class="s">42</span>,
+    name:  <span class="s">"Bob"</span>,
+    email: <span class="s">"bob@example.com"</span>
+};</code></pre>
+
+</section>
+
+<!-- ═══ GENERICS ═══ -->
+<section class="doc-section" id="generics">
+  <div class="page-label">// language</div>
+  <h1 class="page-title">Generics</h1>
+  <p class="page-lead">Iris supports parametric types on both <code>type</code> declarations and <code>fn</code> definitions. No variance annotations, no wildcards.</p>
+
+  <h2 class="section-title">Generic types</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">type</span> <span class="t">Pair</span>[A, B] {
+    first:  A,
+    second: B
+}
+
+<span class="k">let</span> p = <span class="t">Pair</span>[<span class="t">Int</span>, <span class="t">String</span>] { first: <span class="s">1</span>, second: <span class="s">"one"</span> };</code></pre>
+
+  <h2 class="section-title">Generic impl</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">type</span> <span class="t">HashMap</span>[K, V] {
+    keys:   []K,
+    values: []V
+}
+
+<span class="k">impl</span>[K, V] <span class="t">HashMap</span>[K, V] {
+    <span class="k">fn</span> <span class="n">new</span>() -> <span class="t">Self</span> {
+        <span class="k">return</span> <span class="t">Self</span> { keys: [], values: [] };
+    }
+
+    <span class="k">fn</span> <span class="n">get</span>(self, key: K) -> V? {
+        <span class="c">// lookup logic</span>
+    }
+}</code></pre>
+
+  <h2 class="section-title">Generic functions</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">fn</span> <span class="n">first</span>[T](list: []T) -> T? {
+    <span class="k">if</span> list.len == <span class="s">0</span> { <span class="k">return</span> <span class="t">Null</span>; }
+    <span class="k">return</span> list[<span class="s">0</span>];
+}</code></pre>
+
+</section>
+
+<!-- ═══ TRAITS ═══ -->
+<section class="doc-section" id="traits">
+  <div class="page-label">// language</div>
+  <h1 class="page-title">Traits</h1>
+  <p class="page-lead">Traits define shared behaviour. Any type can implement any trait via <code>impl Trait for Type</code>.</p>
+
+  <h2 class="section-title">Defining a trait</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">trait</span> <span class="t">Display</span> {
+    <span class="k">fn</span> <span class="n">toString</span>(self) -> <span class="t">String</span>;
+}
+
+<span class="k">trait</span> <span class="t">Index</span>[K, V] {
+    <span class="k">fn</span> <span class="n">indexOf</span>(self, index: K) -> V;
+}</code></pre>
+
+  <h2 class="section-title">Implementing a trait</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">impl</span> <span class="t">Display</span> <span class="k">for</span> <span class="t">User</span> {
+    <span class="k">fn</span> <span class="n">toString</span>(self) -> <span class="t">String</span> {
+        <span class="k">return</span> <span class="s">"User("</span> + self.name + <span class="s">")"</span>;
+    }
+}
+
+<span class="c">// Generic trait impl</span>
+<span class="k">impl</span>[K, V] <span class="t">Index</span>[K, V?] <span class="k">for</span> <span class="t">HashMap</span>[K, V] {
+    <span class="k">fn</span> <span class="n">indexOf</span>(self, index: K) -> V? {
+        <span class="k">return</span> self.<span class="n">get</span>(index);
+    }
+}</code></pre>
+
+  <h2 class="section-title">Trait bounds</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">fn</span> <span class="n">print</span>[T: <span class="t">Display</span>](val: T) -> <span class="t">Void</span>! {
+    <span class="k">try</span> io.<span class="n">println</span>(val.<span class="n">toString</span>());
+}</code></pre>
+
+</section>
+
+<!-- ═══ METATYPES ═══ -->
+<section class="doc-section" id="metatypes">
+  <div class="page-label">// language</div>
+  <h1 class="page-title">Metatypes</h1>
+  <p class="page-lead">Metatypes let you attach typed, structured metadata to functions. Access it at runtime — no reflection magic required.</p>
+
+  <div class="callout iris">
+    <span class="callout-icon">✦</span>
+    <div>Metatypes are one of Iris's defining features. They enable declarative routing, middleware, and tooling — all typesafe.</div>
+  </div>
+
+  <h2 class="section-title">Declaring a metatype</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="at">@Metatype</span>
+<span class="k">type</span> <span class="t">Get</span> {
+    path: <span class="t">String</span>
+}
+
+<span class="at">@Metatype</span>
+<span class="k">type</span> <span class="t">Middleware</span> {
+    name:     <span class="t">String</span>,
+    priority: <span class="t">Int</span>
+}</code></pre>
+
+  <h2 class="section-title">Annotating functions</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="at">@Get</span>(path = <span class="s">"/user"</span>)
+<span class="k">fn</span> <span class="n">getUser</span>() -> <span class="t">HttpResponse</span>? {
+    <span class="c">// handler logic</span>
+}
+
+<span class="at">@Get</span>(path = <span class="s">"/posts"</span>)
+<span class="at">@Middleware</span>(name = <span class="s">"auth"</span>, priority = <span class="s">1</span>)
+<span class="k">fn</span> <span class="n">getPosts</span>() -> <span class="t">HttpResponse</span>? {
+    <span class="c">// handler logic</span>
+}</code></pre>
+
+  <h2 class="section-title">Reading metadata at runtime</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">let</span> routes: <span class="t">HashMap</span>[<span class="t">String</span>, <span class="k">fn</span>() -> <span class="t">HttpResponse</span>?] = <span class="t">HashMap</span>::<span class="n">new</span>();
+
+<span class="k">fn</span> <span class="n">register</span>(handler: <span class="k">fn</span>() -> <span class="t">HttpResponse</span>?) -> <span class="t">Void</span> {
+    <span class="k">let</span> meta: <span class="t">Immutable</span>[<span class="t">Get</span>]? = handler.meta[<span class="t">Get</span>];
+
+    <span class="k">if</span> meta != <span class="t">Null</span> {
+        routes[meta.path] = handler;
+    }
+}
+
+<span class="n">register</span>(getUser);
+<span class="n">register</span>(getPosts);</code></pre>
+
+  <h2 class="section-title">The Immutable wrapper</h2>
+  <p>Metadata returned via <code>.meta[T]</code> is wrapped in <code>Immutable[T]</code> to prevent accidental mutation of compile-time annotations. Access fields normally, but reassignment is forbidden.</p>
+
+</section>
+
+<!-- ═══ STD IO ═══ -->
+<section class="doc-section" id="std-io">
+  <div class="page-label">// stdlib</div>
+  <h1 class="page-title">std::io</h1>
+  <p class="page-lead">Standard I/O operations. All functions are fallible — they return <code>Void!</code> or a typed result.</p>
+
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">import</span> std::io;</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Function</th><th>Signature</th><th>Description</th></tr>
+      <tr><td>io.println</td><td><code>fn(v: Any) -> Void!</code></td><td>Print line to stdout</td></tr>
+      <tr><td>io.print</td><td><code>fn(v: Any) -> Void!</code></td><td>Print without newline</td></tr>
+      <tr><td>io.readLine</td><td><code>fn() -> String!</code></td><td>Read a line from stdin</td></tr>
+      <tr><td>io.readFile</td><td><code>fn(path: String) -> String!</code></td><td>Read file contents</td></tr>
+      <tr><td>io.writeFile</td><td><code>fn(path: String, data: String) -> Void!</code></td><td>Write to file</td></tr>
+    </table>
+  </div>
+
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">fn</span> <span class="n">main</span>() -> <span class="t">Void</span>! {
+    <span class="k">try</span> io.<span class="n">println</span>(<span class="s">"Enter your name:"</span>);
+    <span class="k">let</span> name = <span class="k">try</span> io.<span class="n">readLine</span>();
+    <span class="k">try</span> io.<span class="n">println</span>(<span class="s">"Hello, "</span> + name);
+}</code></pre>
+</section>
+
+<!-- ═══ STD HTTP ═══ -->
+<section class="doc-section" id="std-http">
+  <div class="page-label">// stdlib</div>
+  <h1 class="page-title">std::http</h1>
+  <p class="page-lead">HTTP server utilities. Build declarative HTTP handlers using metatypes and the routing API.</p>
+
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">import</span> std::http;</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Function</th><th>Signature</th><th>Description</th></tr>
+      <tr><td>http.serve</td><td><code>fn(port: Int) -> Server!</code></td><td>Create an HTTP server</td></tr>
+      <tr><td>http.ok</td><td><code>fn(body: String) -> HttpResponse</code></td><td>200 OK response</td></tr>
+      <tr><td>http.notFound</td><td><code>fn() -> HttpResponse</code></td><td>404 response</td></tr>
+      <tr><td>http.error</td><td><code>fn(msg: String) -> HttpResponse</code></td><td>500 response</td></tr>
+    </table>
+  </div>
+
+</section>
+
+<!-- ═══ STD COLLECTIONS ═══ -->
+<section class="doc-section" id="std-collections">
+  <div class="page-label">// stdlib</div>
+  <h1 class="page-title">std::collections</h1>
+  <p class="page-lead">Built-in generic collection types. <code>HashMap</code> is also available as a language primitive.</p>
+
+  <h2 class="section-title">HashMap[K, V]</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">let</span> map: <span class="t">HashMap</span>[<span class="t">String</span>, <span class="t">Int</span>] = <span class="t">HashMap</span>::<span class="n">new</span>();
+
+map[<span class="s">"apples"</span>] = <span class="s">3</span>;
+
+<span class="k">let</span> count: <span class="t">Int</span>? = map[<span class="s">"apples"</span>]; <span class="c">// V? via Index trait</span></code></pre>
+
+  <h2 class="section-title">Array []T</h2>
+  <pre><div class="pre-header"><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div><span class="pre-lang">iris</span><button class="pre-copy" onclick="copyCode(this)">copy</button></div><code><span class="k">let</span> nums: []<span class="t">Int</span> = [<span class="s">1</span>, <span class="s">2</span>, <span class="s">3</span>, <span class="s">4</span>, <span class="s">5</span>];
+
+<span class="k">let</span> first = nums[<span class="s">0</span>];     <span class="c">// Int</span>
+<span class="k">let</span> len   = nums.len;    <span class="c">// Int</span>
+<span class="k">let</span> slice = nums[<span class="s">1</span>..<span class="s">3</span>]; <span class="c">// []Int</span></code></pre>
+
+</section>
+
+<!-- ═══ KEYWORDS ═══ -->
+<section class="doc-section" id="keywords">
+  <div class="page-label">// reference</div>
+  <h1 class="page-title">Keywords</h1>
+  <p class="page-lead">Reserved keywords in Iris. These cannot be used as identifiers.</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th>Keyword</th><th>Usage</th></tr>
+      <tr><td>fn</td><td>Function declaration</td></tr>
+      <tr><td>let</td><td>Variable binding</td></tr>
+      <tr><td>type</td><td>Struct / type declaration</td></tr>
+      <tr><td>error</td><td>Error enum declaration</td></tr>
+      <tr><td>impl</td><td>Method or trait implementation</td></tr>
+      <tr><td>trait</td><td>Trait declaration</td></tr>
+      <tr><td>for</td><td>Trait implementation target</td></tr>
+      <tr><td>return</td><td>Return from function</td></tr>
+      <tr><td>if / else</td><td>Conditional</td></tr>
+      <tr><td>match</td><td>Pattern matching</td></tr>
+      <tr><td>try</td><td>Propagate error to caller</td></tr>
+      <tr><td>catch</td><td>Provide fallback on error</td></tr>
+      <tr><td>import</td><td>Module import</td></tr>
+      <tr><td>self</td><td>Instance reference in methods</td></tr>
+      <tr><td>Self</td><td>Current type reference in impl</td></tr>
+      <tr><td>Null</td><td>Absence of value</td></tr>
+      <tr><td>true / false</td><td>Boolean literals</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ OPERATORS ═══ -->
+<section class="doc-section" id="operators">
+  <div class="page-label">// reference</div>
+  <h1 class="page-title">Operators</h1>
+
+  <h2 class="section-title">Arithmetic</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Op</th><th>Description</th></tr>
+      <tr><td>+</td><td>Addition / string concat</td></tr>
+      <tr><td>-</td><td>Subtraction</td></tr>
+      <tr><td>*</td><td>Multiplication</td></tr>
+      <tr><td>/</td><td>Division</td></tr>
+      <tr><td>%</td><td>Modulo</td></tr>
+    </table>
+  </div>
+
+  <h2 class="section-title">Comparison & Logic</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Op</th><th>Description</th></tr>
+      <tr><td>==</td><td>Equality</td></tr>
+      <tr><td>!=</td><td>Inequality</td></tr>
+      <tr><td>&lt; / &gt;</td><td>Less / greater than</td></tr>
+      <tr><td>&lt;= / &gt;=</td><td>Less / greater or equal</td></tr>
+      <tr><td>&amp;&amp;</td><td>Logical AND</td></tr>
+      <tr><td>||</td><td>Logical OR</td></tr>
+      <tr><td>!</td><td>Logical NOT</td></tr>
+    </table>
+  </div>
+
+  <h2 class="section-title">Type operators</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Syntax</th><th>Description</th></tr>
+      <tr><td>T?</td><td>Nullable type modifier</td></tr>
+      <tr><td>T!</td><td>Fallible type modifier</td></tr>
+      <tr><td>T!?</td><td>Nullable and fallible</td></tr>
+      <tr><td>.Variant</td><td>Error/enum variant shorthand</td></tr>
+      <tr><td>X::Y</td><td>Namespace / static method access</td></tr>
+      <tr><td>x.y</td><td>Field / method access</td></tr>
+      <tr><td>x[i]</td><td>Index access (via Index trait)</td></tr>
+      <tr><td>a..b</td><td>Integer range (inclusive)</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div class="footer-text">// iris-lang.dev · v0.1-alpha</div>
+  <div class="footer-nav">
+    <a href="#"><span class="arrow">←</span> Previous</a>
+    <a href="#">Next <span class="arrow">→</span></a>
+  </div>
+</div>
+
+</main>
+
+<!-- TOC -->
+<aside class="toc">
+  <div class="toc-title">On this page</div>
+  <div id="toc-content"></div>
+</aside>
+
+</div>
+
+<script>
+function showSection(id) {
+  document.querySelectorAll('.doc-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+
+  const section = document.getElementById(id);
+  if (section) section.classList.add('active');
+
+  document.querySelectorAll('.sidebar-link').forEach(l => {
+    if (l.getAttribute('onclick') && l.getAttribute('onclick').includes("'" + id + "'")) {
+      l.classList.add('active');
+    }
+  });
+
+  buildTOC(id);
+  window.scrollTo({ top: 0 });
+}
+
+function buildTOC(id) {
+  const section = document.getElementById(id);
+  if (!section) return;
+  const toc = document.getElementById('toc-content');
+  toc.innerHTML = '';
+  section.querySelectorAll('h2.section-title, h3.subsection-title').forEach(h => {
+    const a = document.createElement('a');
+    a.className = 'toc-link' + (h.tagName === 'H3' ? ' sub' : '');
+    a.textContent = h.textContent.replace('', '').trim();
+    a.href = '#';
+    toc.appendChild(a);
+  });
+}
+
+function copyCode(btn) {
+  const code = btn.closest('pre').querySelector('code');
+  const text = code.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'copied!';
+    setTimeout(() => btn.textContent = 'copy', 1500);
+  });
+}
+
+buildTOC('intro');
+</script>
+</body>
+</html>

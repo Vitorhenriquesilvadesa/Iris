@@ -1,0 +1,10 @@
+[package]
+name = "iris-lexer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+iris-diagnostic = { path = "../iris-diagnostic" }
+iris-span = { path = "../iris-span" }
+iris-db = { path = "../iris-db" }
+iris-syntax = { path = "../iris-syntax" }
