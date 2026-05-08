@@ -8,7 +8,9 @@ use iris_hir::{
     item::{HirItem, ItemId},
     statement::{HirStatement, StmtId},
 };
-use iris_span::source_file::SourceFileId;
+use iris_span::{Span, source_file::SourceFileId};
+
+use crate::{diagnostic::map_hir_error, error::HirError};
 
 #[derive(Debug, Clone)]
 pub struct HirOutput {
@@ -51,6 +53,11 @@ where
             value: self.hir.clone(),
             diagnostics: Diagnostics::new(self.diagnostics.clone()),
         }
+    }
+
+    pub(crate) fn report_error(&mut self, error: HirError, span: Span) {
+        let diagnostic = map_hir_error(error, self.source_file_id, span);
+        self.diagnostics.push(diagnostic);
     }
 
     pub(crate) fn allocate_item(&mut self, item: HirItem) -> ItemId {

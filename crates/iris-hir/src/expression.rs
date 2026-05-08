@@ -36,8 +36,30 @@ pub struct HirLambdaParam {
 }
 
 #[derive(Debug, Clone)]
+pub struct HirMember {
+    pub members: Vec<SymbolId>,
+    pub base: ExprId,
+}
+
+#[derive(Debug, Clone)]
+pub struct HirIfExpr {
+    pub condition: ExprId,
+    pub then_branch: ExprId,
+    pub else_branch: ExprId,
+}
+
+#[derive(Debug, Clone)]
+pub struct HirAssign {
+    pub target: ExprId,
+    pub op: HirAssignOp,
+    pub value: ExprId,
+}
+
+#[derive(Debug, Clone)]
 pub enum HirExpression {
     Literal(HirLiteral),
+
+    Member(HirMember),
 
     Ident(SymbolId),
 
@@ -73,11 +95,9 @@ pub enum HirExpression {
         end: ExprId,
     },
 
-    Assign {
-        assignee: ExprId,
-        op: HirAssignOp,
-        value: ExprId,
-    },
+    Assign(HirAssign),
+
+    If(HirIfExpr),
 
     Error,
 }

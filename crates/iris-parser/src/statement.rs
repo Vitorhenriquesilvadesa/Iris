@@ -16,6 +16,7 @@ impl<'a> Parser<'a> {
                 TokenKind::If => self.parse_if(),
                 _ => {
                     let expr = self.parse_expr()?;
+                    self.expect_bump(TokenKind::Semicolon)?;
                     let span = expr.span;
                     Some(Spanned::new(StmtKind::Expr(expr), span))
                 }

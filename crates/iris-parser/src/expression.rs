@@ -1,7 +1,7 @@
 use iris_ast::{
     Expression, Spanned,
     expression::{
-        AssignmentExpr, AssignmentOp, BinaryExpr, BinaryOp, CallExpr, ExprKind, Literal,
+        AssignmentExpr, AssignmentOp, BinaryExpr, BinaryOp, CallExpr, ExprKind, IfExpr, Literal,
         MemberExpr, UnaryExpr, UnaryOp,
     },
 };
@@ -22,7 +22,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_assign(&mut self) -> ParseResult<Expression> {
-        let lhs = self.parse_catch()?;
+        let lhs = self.parse_ternary()?;
 
         let is_assign = self
             .stream
@@ -63,6 +63,29 @@ impl<'a> Parser<'a> {
         }
 
         Some(lhs)
+    }
+
+    fn parse_ternary(&mut self) -> ParseResult<Expression> {
+        let expr = self.parse_catch()?;
+
+        if self.check(TokenKind::If) {
+            let mut start_span = self.expect_bump(TokenKind::If)?.span;
+            let then_branch = self.parse_catch()?;
+            start_span = start_span.merge(&self.expect_bump(TokenKind::Else)?.span);
+            let else_branch = self.parse_catch()?;
+            let end_span = else_branch.span;
+
+            return Some(Expression::new(
+                ExprKind::If(Box::new(IfExpr {
+                    condition: expr,
+                    else_branch,
+                    then_branch,
+                })),
+                start_span.merge(&end_span),
+            ));
+        }
+
+        Some(expr)
     }
 
     fn parse_catch(&mut self) -> ParseResult<Expression> {
@@ -322,11 +345,20 @@ impl<'a> Parser<'a> {
                 if self.check(TokenKind::RBracket) {
                     let end_token = self.stream_mut().bump().unwrap();
                     let full_span = span.merge(&end_token.span);
-
                     return Some(Spanned::new(ExprKind::List(Vec::new()), full_span));
                 }
 
-                let expr = self.parse_expr()?;
+                let mut elements = vec![];
+
+                loop {
+                    elements.push(self.parse_assign()?);
+
+                    if !self.check(TokenKind::Comma) {
+                        break;
+                    }
+
+                    self.stream_mut().bump();
+                }
 
                 let end_span = match self.stream_mut().expect(TokenKind::RBracket) {
                     Ok(tok) => tok.span,
@@ -335,8 +367,6 @@ impl<'a> Parser<'a> {
                         self.stream().peek().map(|t| t.span).unwrap_or(span)
                     }
                 };
-
-                let elements = self.flatten_comma_expr(expr);
 
                 let full_span = span.merge(&end_span);
                 Some(Spanned::new(ExprKind::List(elements), full_span))
@@ -369,17 +399,6 @@ impl<'a> Parser<'a> {
                 self.stream_mut().bump();
                 None
             }
-        }
-    }
-
-    fn flatten_comma_expr(&self, expr: Expression) -> Vec<Expression> {
-        match expr.node {
-            ExprKind::Binary(bin) if bin.op == BinaryOp::Comma => {
-                let mut elements = self.flatten_comma_expr(bin.left);
-                elements.extend(self.flatten_comma_expr(bin.right));
-                elements
-            }
-            _ => vec![expr],
         }
     }
 
