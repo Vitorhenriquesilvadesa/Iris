@@ -4,7 +4,7 @@ use la_arena::Idx;
 
 use crate::{globals::DefId, statement::StmtId};
 
-pub type ExprId = Idx<Expression>;
+pub type ExprId = Idx<HirExpression>;
 
 /// Represents literal values in the AST.
 #[derive(Debug, Clone)]
@@ -36,8 +36,10 @@ pub struct HirLambdaParam {
 }
 
 #[derive(Debug, Clone)]
-pub enum Expression {
+pub enum HirExpression {
     Literal(HirLiteral),
+
+    Ident(SymbolId),
 
     Variable(Resolution),
 

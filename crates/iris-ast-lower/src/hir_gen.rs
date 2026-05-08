@@ -1,8 +1,10 @@
+#[warn(dead_code)]
 use iris_ast::Item;
 use iris_db::symbol::SymbolQueries;
 use iris_diagnostic::{Diagnostic, Diagnostics};
 use iris_hir::{
     Hir,
+    expression::{ExprId, HirExpression},
     item::{HirItem, ItemId},
     statement::{HirStatement, StmtId},
 };
@@ -55,7 +57,11 @@ where
         self.hir.allocate_item(item)
     }
 
-    pub(crate) fn allocate_stmt(&mut self, item: HirStatement) -> StmtId {
-        self.hir.allocate_stmt(item)
+    pub(crate) fn allocate_stmt(&mut self, stmt: HirStatement) -> StmtId {
+        self.hir.allocate_stmt(stmt)
+    }
+
+    pub(crate) fn allocate_expr(&mut self, expr: HirExpression) -> ExprId {
+        self.hir.allocate_expr(expr)
     }
 }

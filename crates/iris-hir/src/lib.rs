@@ -1,7 +1,7 @@
 use la_arena::Arena;
 
 use crate::{
-    expression::{ExprId, Expression},
+    expression::{ExprId, HirExpression},
     item::{HirItem, ItemId},
     statement::{HirStatement, StmtId},
 };
@@ -14,7 +14,7 @@ pub mod statement;
 
 #[derive(Debug, Clone, Default)]
 pub struct Hir {
-    pub expressions: Arena<Expression>,
+    pub expressions: Arena<HirExpression>,
     pub statements: Arena<HirStatement>,
     pub items: Arena<HirItem>,
 }
@@ -24,7 +24,7 @@ impl Hir {
         Self::default()
     }
 
-    pub fn allocate_expr(&mut self, expr: Expression) -> ExprId {
+    pub fn allocate_expr(&mut self, expr: HirExpression) -> ExprId {
         self.expressions.alloc(expr)
     }
 

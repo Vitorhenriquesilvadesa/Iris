@@ -1,3 +1,4 @@
+#[warn(dead_code)]
 use iris_diagnostic::{Diagnostic, codes::*};
 use iris_span::{Span, source_file::SourceFileId};
 
@@ -7,23 +8,23 @@ pub fn map_hir_error(error: HirError, file: SourceFileId, span: Span) -> Diagnos
     let (code, message, label, notes) = match error {
         HirError::TupleExpression => (
             TUPLE_EXPRESSION_CODE,
-            format!("Iris does not support tuples"),
-            format!("unexpected tuple expression"),
+            "Iris does not support tuples".to_string(),
+            "unexpected tuple expression".to_string(),
             vec![
-                format!("comma is only allowed in function argument lists"),
-                format!("consider using an array instead"),
+                "comma is only allowed in function argument lists".to_string(),
+                "consider using an array instead".to_string(),
             ],
         ),
         HirError::InvalidAssignTarget => (
             INVALID_ASSIGN_TARGET_CODE,
-            format!("invalid assignment target"),
-            format!("unexpected assign target"),
+            "invalid assignment target".to_string(),
+            "unexpected assign target".to_string(),
             vec![],
         ),
         HirError::SymbolNotFound(symbol) => (
             SYMBOL_NOT_FOUND_CODE,
             format!("symbol `{}` not found in this scope", symbol),
-            format!("unexpected symbol"),
+            "unexpected symbol".to_string(),
             vec![],
         ),
     };

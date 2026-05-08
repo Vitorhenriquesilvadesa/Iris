@@ -17,16 +17,16 @@ where
 {
     pub(super) fn gen_hir_for(&mut self, item: &Spanned<ItemKind>) -> HirResult<ItemId> {
         match &item.node {
-            ItemKind::Import(import_def) => todo!(),
-            ItemKind::GlobalLet(let_stmt) => todo!(),
+            ItemKind::Import(_) => todo!(),
+            ItemKind::GlobalLet(_) => todo!(),
             ItemKind::Type(type_def) => self.gen_type_ir(type_def),
             ItemKind::Stmt(stmt_kind) => {
                 let stmt = self.gen_stmt_ir(stmt_kind)?;
                 Some(self.allocate_item(HirItem::Stmt(stmt)))
             }
             ItemKind::Function(function_def) => self.gen_function_ir(function_def),
-            ItemKind::Metadata(meta_data_usage) => todo!(),
-            ItemKind::Impl(impl_def) => todo!(),
+            ItemKind::Metadata(_) => todo!(),
+            ItemKind::Impl(_) => todo!(),
         }
     }
 
@@ -40,9 +40,9 @@ where
         }: &FunctionDef,
     ) -> HirResult<ItemId> {
         let name = self.ctx.intern_symbol(&name.node);
-        let return_type = self.get_type_info(&Some(return_kind));
+        let return_type = self.get_type_info(Some(return_kind));
         let mut hir_body: Vec<StmtId> = Vec::new();
-        let mut params: Vec<HirParam> = Vec::new();
+        let mut hir_params: Vec<HirParam> = Vec::new();
 
         for s in &body.stmts {
             if let Some(stmt) = self.gen_stmt_ir(&s.node) {
@@ -50,11 +50,23 @@ where
             }
         }
 
+        for p in params {
+            let p_name = self.ctx.intern_symbol(&p.node.name.node);
+            let p_kind = self.get_type_info(p.node.kind.as_ref());
+
+            let param = HirParam {
+                name: p_name,
+                kind: p_kind,
+            };
+
+            hir_params.push(param);
+        }
+
         let hir_function = HirItem::Function(HirFunction {
             name,
             return_type,
             body: hir_body,
-            params,
+            params: hir_params,
         });
 
         Some(self.allocate_item(hir_function))
@@ -68,7 +80,7 @@ where
             .iter()
             .map(|f| {
                 let symbol_id = self.ctx.intern_symbol(&f.node.name.node);
-                let type_info = self.get_type_info(&f.node.kind);
+                let type_info = self.get_type_info(f.node.kind.as_ref());
 
                 (symbol_id, type_info)
             })
@@ -79,7 +91,7 @@ where
         Some(self.allocate_item(hir_type))
     }
 
-    pub(crate) fn get_type_info(&self, kind: &Option<Spanned<AstTypeInfo>>) -> Option<HirTypeInfo> {
+    pub(crate) fn get_type_info(&self, kind: Option<&Spanned<AstTypeInfo>>) -> Option<HirTypeInfo> {
         if let Some(k) = &kind {
             let info = self.lower_base(&k.node.base.node);
             Some(self.apply_modifier(info, &k.node.modifier.node))
